@@ -1,0 +1,21 @@
+[model]
+attribute_encoder_type = 'onehot'
+resnet_hidden_dim = 1024
+resnet_num_blocks = 2
+exog_input_dim = 103
+onehot_attr_input_dim = 336
+mlp_hidden_dim = 256
+qoi_dim = 1
+text_encoder_name = 'distilbert-base-uncased'
+text_freeze_encoder = false
+text_finetune_only_specific_layers = true
+continuous_head = 'mse'
+ignore_attributes = false
+timestamp_embedding_size = 32
+
+[experiment]
+module_name = 'resnet'
+lr = 0.001
+batch_size = 512
+max_train_steps = 100000
+early_stopping_patience = 5

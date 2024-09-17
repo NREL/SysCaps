@@ -1,0 +1,21 @@
+[model]
+attribute_encoder_type = 'onehot'
+autoreg_type = 'rnn'
+autoreg_input_dim = 103
+autoreg_hidden_size = 128
+autoreg_num_layers = 4
+mlp_hidden_dim = 256
+onehot_attr_input_dim = 3449
+qoi_dim = 1
+text_encoder_name = 'distilbert-base-uncased'
+text_freeze_encoder = false
+continuous_head = 'mse'
+ignore_attributes = false
+timestamp_embedding_size = 32
+
+[experiment]
+module_name = 'autoregressive'
+lr = 0.001
+batch_size = 64
+max_train_steps = 200000
+early_stopping_patience = 50

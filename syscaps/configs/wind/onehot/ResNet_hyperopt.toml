@@ -1,0 +1,7 @@
+[model]
+resnet_hidden_dim = [256,1024]
+resnet_num_blocks = [2,8]
+
+[experiment]
+lr = [1e-5, 3e-4, 1e-3]
+batch_size = [128,256]

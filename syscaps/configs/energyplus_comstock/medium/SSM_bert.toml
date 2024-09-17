@@ -1,0 +1,23 @@
+[model]
+attribute_encoder_type = 'text'
+autoreg_type = 'ssm'
+autoreg_input_dim = 103
+autoreg_hidden_size = 128
+autoreg_num_layers = 4
+ssm_pool = []
+onehot_attr_input_dim = 336
+mlp_hidden_dim = 256
+qoi_dim = 1
+text_encoder_name = 'bert-base-uncased'
+text_freeze_encoder = false
+text_finetune_only_specific_layers = false
+continuous_head = 'mse'
+ignore_attributes = false
+timestamp_embedding_size = 32
+
+[experiment]
+module_name = 'autoregressive'
+lr = 5e-5
+batch_size = 64
+max_train_steps = 200000
+early_stopping_patience = 50

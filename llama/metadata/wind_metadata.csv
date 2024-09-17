@@ -1,0 +1,501 @@
+,Layout Type,Mean Turbine Spacing
+0,cluster,5
+1,single string,4
+2,cluster,4
+3,cluster,7
+4,parallel strings,7
+5,parallel strings,7
+6,cluster,6
+7,single string,7
+8,single string,5
+9,parallel strings,6
+10,parallel strings,3
+11,multiple strings,5
+12,multiple strings,5
+13,cluster,4
+14,parallel strings,6
+15,single string,6
+16,cluster,4
+17,cluster,6
+18,single string,4
+19,parallel strings,4
+20,parallel strings,5
+21,parallel strings,6
+22,parallel strings,6
+23,cluster,6
+24,cluster,4
+25,single string,3
+26,cluster,3
+27,parallel strings,6
+28,cluster,6
+29,single string,6
+30,multiple strings,3
+31,cluster,8
+32,parallel strings,7
+33,multiple strings,4
+34,cluster,4
+35,cluster,4
+36,multiple strings,5
+37,cluster,5
+38,cluster,3
+39,multiple strings,4
+40,multiple strings,5
+41,single string,6
+42,multiple strings,4
+43,parallel strings,7
+44,multiple strings,4
+45,parallel strings,4
+46,cluster,7
+47,cluster,8
+48,cluster,3
+49,cluster,4
+50,single string,7
+51,single string,7
+52,single string,3
+53,single string,3
+54,cluster,3
+55,parallel strings,5
+56,single string,4
+57,single string,7
+58,cluster,6
+59,multiple strings,5
+60,single string,7
+61,cluster,4
+62,cluster,7
+63,parallel strings,7
+64,multiple strings,4
+65,multiple strings,6
+66,multiple strings,4
+67,cluster,6
+68,single string,7
+69,parallel strings,7
+70,multiple strings,5
+71,multiple strings,4
+72,parallel strings,5
+73,single string,6
+74,parallel strings,5
+75,cluster,5
+76,cluster,3
+77,cluster,3
+78,cluster,7
+79,multiple strings,4
+80,single string,5
+81,parallel strings,7
+82,parallel strings,4
+83,single string,7
+84,cluster,8
+85,single string,9
+86,cluster,8
+87,parallel strings,7
+88,single string,6
+89,multiple strings,3
+90,multiple strings,4
+91,parallel strings,4
+92,single string,6
+93,parallel strings,6
+94,parallel strings,7
+95,multiple strings,6
+96,cluster,7
+97,cluster,7
+98,multiple strings,5
+99,multiple strings,7
+100,cluster,6
+101,multiple strings,4
+102,multiple strings,5
+103,multiple strings,3
+104,cluster,4
+105,parallel strings,4
+106,single string,4
+107,single string,4
+108,single string,4
+109,multiple strings,6
+110,multiple strings,4
+111,cluster,6
+112,multiple strings,4
+113,single string,4
+114,cluster,7
+115,single string,5
+116,multiple strings,6
+117,single string,5
+118,cluster,3
+119,single string,7
+120,cluster,3
+121,cluster,4
+122,cluster,7
+123,parallel strings,6
+124,cluster,4
+125,multiple strings,5
+126,multiple strings,3
+127,cluster,4
+128,multiple strings,4
+129,cluster,3
+130,single string,3
+131,cluster,7
+132,single string,7
+133,parallel strings,3
+134,single string,4
+135,single string,5
+136,single string,7
+137,parallel strings,5
+138,single string,4
+139,parallel strings,6
+140,multiple strings,4
+141,parallel strings,4
+142,cluster,6
+143,single string,8
+144,cluster,5
+145,parallel strings,4
+146,multiple strings,4
+147,parallel strings,5
+148,cluster,8
+149,multiple strings,4
+150,parallel strings,5
+151,cluster,5
+152,single string,7
+153,cluster,5
+154,multiple strings,4
+155,parallel strings,5
+156,single string,7
+157,parallel strings,7
+158,single string,7
+159,single string,5
+160,cluster,7
+161,parallel strings,4
+162,cluster,6
+163,cluster,4
+164,multiple strings,3
+165,parallel strings,7
+166,single string,4
+167,multiple strings,3
+168,single string,5
+169,single string,7
+170,multiple strings,6
+171,cluster,7
+172,multiple strings,5
+173,multiple strings,7
+174,single string,5
+175,single string,6
+176,multiple strings,5
+177,single string,7
+178,single string,7
+179,parallel strings,6
+180,single string,5
+181,multiple strings,6
+182,parallel strings,6
+183,cluster,6
+184,cluster,8
+185,parallel strings,6
+186,single string,3
+187,multiple strings,7
+188,cluster,5
+189,cluster,5
+190,single string,5
+191,cluster,6
+192,single string,4
+193,cluster,5
+194,single string,5
+195,single string,6
+196,multiple strings,3
+197,cluster,4
+198,cluster,5
+199,single string,3
+200,cluster,3
+201,single string,6
+202,cluster,6
+203,cluster,6
+204,multiple strings,5
+205,single string,7
+206,parallel strings,4
+207,parallel strings,6
+208,parallel strings,3
+209,parallel strings,4
+210,multiple strings,6
+211,cluster,6
+212,multiple strings,3
+213,cluster,4
+214,multiple strings,4
+215,single string,4
+216,cluster,3
+217,parallel strings,4
+218,multiple strings,4
+219,single string,6
+220,parallel strings,4
+221,single string,5
+222,cluster,6
+223,parallel strings,6
+224,parallel strings,4
+225,parallel strings,4
+226,cluster,4
+227,cluster,8
+228,parallel strings,4
+229,cluster,6
+230,multiple strings,5
+231,parallel strings,6
+232,parallel strings,4
+233,single string,3
+234,multiple strings,4
+235,multiple strings,4
+236,single string,5
+237,single string,4
+238,parallel strings,6
+239,multiple strings,4
+240,multiple strings,5
+241,cluster,6
+242,single string,5
+243,multiple strings,4
+244,parallel strings,3
+245,multiple strings,6
+246,cluster,7
+247,cluster,8
+248,single string,3
+249,cluster,4
+250,multiple strings,4
+251,multiple strings,4
+252,parallel strings,5
+253,cluster,8
+254,cluster,7
+255,multiple strings,5
+256,single string,4
+257,cluster,6
+258,multiple strings,4
+259,single string,3
+260,parallel strings,5
+261,cluster,7
+262,multiple strings,4
+263,multiple strings,4
+264,single string,6
+265,multiple strings,7
+266,cluster,3
+267,parallel strings,7
+268,single string,7
+269,cluster,6
+270,single string,4
+271,cluster,7
+272,single string,4
+273,cluster,4
+274,multiple strings,3
+275,multiple strings,6
+276,cluster,6
+277,multiple strings,3
+278,multiple strings,3
+279,cluster,4
+280,cluster,5
+281,multiple strings,4
+282,parallel strings,3
+283,parallel strings,7
+284,cluster,6
+285,multiple strings,7
+286,parallel strings,7
+287,single string,7
+288,multiple strings,4
+289,multiple strings,6
+290,single string,4
+291,single string,5
+292,single string,4
+293,single string,5
+294,single string,6
+295,parallel strings,7
+296,multiple strings,4
+297,cluster,8
+298,cluster,5
+299,multiple strings,4
+300,single string,7
+301,single string,3
+302,parallel strings,3
+303,cluster,7
+304,single string,5
+305,single string,4
+306,parallel strings,7
+307,single string,6
+308,parallel strings,4
+309,parallel strings,5
+310,cluster,6
+311,single string,4
+312,parallel strings,6
+313,single string,5
+314,single string,3
+315,cluster,5
+316,parallel strings,4
+317,parallel strings,5
+318,single string,4
+319,cluster,6
+320,multiple strings,3
+321,single string,4
+322,parallel strings,4
+323,parallel strings,8
+324,single string,7
+325,parallel strings,5
+326,single string,5
+327,parallel strings,4
+328,single string,4
+329,cluster,7
+330,cluster,5
+331,cluster,3
+332,parallel strings,5
+333,multiple strings,5
+334,cluster,7
+335,parallel strings,5
+336,single string,4
+337,parallel strings,6
+338,parallel strings,3
+339,cluster,7
+340,parallel strings,6
+341,parallel strings,7
+342,single string,5
+343,parallel strings,6
+344,parallel strings,5
+345,single string,6
+346,multiple strings,4
+347,parallel strings,7
+348,multiple strings,5
+349,cluster,5
+350,multiple strings,5
+351,single string,6
+352,multiple strings,5
+353,cluster,5
+354,cluster,6
+355,parallel strings,6
+356,single string,7
+357,multiple strings,3
+358,multiple strings,3
+359,single string,4
+360,single string,4
+361,parallel strings,7
+362,single string,6
+363,multiple strings,6
+364,parallel strings,7
+365,parallel strings,6
+366,cluster,3
+367,parallel strings,7
+368,parallel strings,4
+369,cluster,3
+370,parallel strings,6
+371,cluster,3
+372,cluster,6
+373,parallel strings,6
+374,multiple strings,5
+375,multiple strings,3
+376,single string,4
+377,multiple strings,3
+378,parallel strings,5
+379,single string,5
+380,parallel strings,3
+381,single string,6
+382,parallel strings,7
+383,multiple strings,7
+384,cluster,3
+385,single string,4
+386,parallel strings,7
+387,parallel strings,5
+388,cluster,3
+389,parallel strings,4
+390,multiple strings,4
+391,multiple strings,3
+392,single string,3
+393,cluster,5
+394,single string,4
+395,cluster,4
+396,parallel strings,7
+397,multiple strings,8
+398,multiple strings,4
+399,cluster,5
+400,single string,3
+401,single string,4
+402,single string,5
+403,parallel strings,4
+404,multiple strings,4
+405,parallel strings,4
+406,parallel strings,6
+407,single string,7
+408,parallel strings,5
+409,parallel strings,5
+410,parallel strings,7
+411,parallel strings,5
+412,parallel strings,7
+413,multiple strings,4
+414,single string,6
+415,multiple strings,5
+416,cluster,7
+417,parallel strings,5
+418,parallel strings,4
+419,parallel strings,7
+420,single string,3
+421,multiple strings,4
+422,multiple strings,5
+423,cluster,7
+424,single string,5
+425,parallel strings,5
+426,cluster,3
+427,single string,4
+428,multiple strings,5
+429,parallel strings,4
+430,parallel strings,4
+431,parallel strings,3
+432,parallel strings,7
+433,cluster,5
+434,parallel strings,6
+435,multiple strings,4
+436,multiple strings,4
+437,cluster,4
+438,single string,4
+439,parallel strings,3
+440,cluster,4
+441,parallel strings,6
+442,cluster,4
+443,cluster,3
+444,multiple strings,5
+445,cluster,5
+446,parallel strings,5
+447,single string,7
+448,single string,6
+449,multiple strings,5
+450,single string,4
+451,multiple strings,4
+452,multiple strings,4
+453,multiple strings,4
+454,parallel strings,6
+455,multiple strings,4
+456,single string,5
+457,multiple strings,5
+458,single string,6
+459,single string,5
+460,cluster,4
+461,cluster,3
+462,parallel strings,3
+463,single string,4
+464,cluster,7
+465,cluster,7
+466,multiple strings,4
+467,cluster,5
+468,single string,4
+469,cluster,7
+470,cluster,4
+471,single string,7
+472,parallel strings,6
+473,parallel strings,7
+474,cluster,4
+475,multiple strings,5
+476,cluster,6
+477,single string,5
+478,single string,5
+479,cluster,8
+480,single string,7
+481,single string,6
+482,multiple strings,6
+483,single string,6
+484,cluster,7
+485,parallel strings,4
+486,single string,5
+487,single string,4
+488,multiple strings,4
+489,parallel strings,6
+490,single string,5
+491,parallel strings,3
+492,cluster,6
+493,single string,5
+494,multiple strings,4
+495,single string,7
+496,single string,4
+497,parallel strings,4
+498,cluster,3
+499,cluster,6
