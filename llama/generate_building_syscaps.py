@@ -11,7 +11,6 @@ import time
 from datetime import date, datetime, timedelta, time as t
 
 def main(
-    output_dir: str,
     ckpt_dir: str,
     tokenizer_path: str,
     temperature: float = 0.6,
@@ -27,9 +26,9 @@ def main(
         max_seq_len=max_seq_len,
         max_batch_size=max_batch_size,
     )
-    BUILDINGS_BENCH_PATH = os.environ.get('BUILDINGS_BENCH', '')
-    if BUILDINGS_BENCH_PATH == '':
-            raise ValueError('BUILDINGS_BENCH environment variable not set')
+    SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
+    if SYSCAPS_PATH == '':
+        raise ValueError('SYSCAPS environment variable not set')
     SYSCAPS_PATH = Path(SYSCAPS_PATH)
 
     com_names = [
@@ -53,7 +52,7 @@ def main(
         "long": "Write a building description based on the following attributes. Your answer should be 7-9 sentences. Please note that your response should NOT be a list of attributes and should be entirely based on the information provided. Be as detailed as possible."
     }
 
-    savedir_ = Path(output_dir) / "comstock"
+    savedir_ = SYSCAPS_PATH / 'captions' / 'comstock'
     if not savedir_.exists():
         os.makedirs(savedir_)
     if prompt_length == 'all':
@@ -117,17 +116,19 @@ def main(
                 ans[k] += " AM" if v.hour < 12 else " PM"
         return ", ".join([k + ": " + str(ans[k]) for k in ans if "operating" not in k])
 
-
-    df1 = pd.read_parquet(BUILDINGS_BENCH_PATH / 'metadata' / 'comstock_amy2018.parquet', engine="pyarrow")
-    df2 = pd.read_parquet(BUILDINGS_BENCH_PATH / 'metadata' / 'comstock_tmy3.parquet', engine="pyarrow")
+    metadata_dir = SYSCAPS_PATH / 'Buildings-900K' / 'end-use-load-profiles-for-us-building-stock' / '2021'
+    df1 = pd.read_parquet(metadata_dir / 'comstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+    df2 = pd.read_parquet(metadata_dir / 'comstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
     df = df1.loc[ df1.index.intersection(df2.index).values ]
 
     for prompt_length in prompt_lengths:
         save_dir_len = savedir_ / f'{prompt_length}'
+        captions = pd.DataFrame(columns=['building_id', 'caption'])
+        
         if not save_dir_len.exists():
             os.makedirs(save_dir_len)
 
-        for bd_id in df.index:
+        for row_idx,bd_id in enumerate(df.index):
             tic = time.perf_counter()
             
             pt = f'{prompts[prompt_length]}\n' + \
@@ -160,9 +161,13 @@ def main(
                 print("\n==================================\n")
 
                 # write to files
-                file = open(save_dir_len / f'{bd_id}_cap.txt', 'w')
-                file.write(result['generation']['content'])
-                file.close()
-        
+                #file = open(save_dir_len / f'{bd_id}_cap.txt', 'w')
+                #file.write(result['generation']['content'])
+                #file.close()
+                
+                captions.loc[row_idx] = [bd_id, result['generation']['content']]
+        # save dataframe to csv
+        captions.to_csv(save_dir_len / 'captions.csv', index=False)
+       
 if __name__ == "__main__":
     fire.Fire(main)

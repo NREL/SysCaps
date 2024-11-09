@@ -8,7 +8,7 @@ from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 
 class WindDataset(torch.utils.data.Dataset):
-    r"""This is a dataset for loading Floris data for surrogate modeling.
+    r"""This is a dataset for loading wind data for surrogate modeling.
 
     the index file is a tab separated file with the following columns:
 
@@ -17,15 +17,15 @@ class WindDataset(torch.utils.data.Dataset):
     and specifies the scenarios for train/val/test.
     """
     def __init__(self, 
-                captions_path: Path,
+                data_path: Path,
                 index_file: str,
                 syscaps_split : str = 'basic',
                 use_random_caption_augmentation: bool = True,
                 caption_augmentation_style: int = 1,
                 tokenizer = 'distilbert-base-uncased',
                 include_text: bool = False):
-        self.captions_path = captions_path / 'captions'
-        self.metadata_path = captions_path / 'metadata'
+        self.captions_path = data_path / 'captions'
+        self.metadata_path = data_path / 'metadata'
         self.include_text = include_text
         self.tokenizer_name = tokenizer
         if self.tokenizer_name == "distilbert-base-uncased":
@@ -36,19 +36,31 @@ class WindDataset(torch.utils.data.Dataset):
         self.syscaps_split = syscaps_split
         self.use_random_caption_augmentation = use_random_caption_augmentation
         self.caption_augmentation_style = caption_augmentation_style
-        self.index_file = self.metadata_path / 'splits' / index_file
+        
+        if self.syscaps_split == 'medium' and self.include_text and self.use_random_caption_augmentation:
+            self.captions_data = {}
+            for i in range(4):
+                self.captions_data[i] = pd.read_csv(self.captions_path / 'wind' / \
+                    self.syscaps_split / f'aug_{i}' / 'captions.csv',
+                    header=0, index_col=0)
+        elif self.syscaps_split == 'medium' and self.include_text:
+            self.captions_data = pd.read_csv(self.captions_path / 'wind' / \
+                self.syscaps_split / f'aug_{self.caption_augmentation_style}' / 'captions.csv', header=0, index_col=0)
+        elif self.include_text:
+            self.captions_data = pd.read_csv(self.captions_path / 'wind' / \
+                self.syscaps_split / 'captions.csv', header=0, index_col=0)
+            
+        self.index_file = self.metadata_path / 'syscaps' / 'splits' / index_file
         self.index_fp = None
         self.__read_index_file(self.index_file)
 
-        self.h5_data =  h5py.File(captions_path / 'wind_plant_data.h5', 'r')
-        self.layout_types = pd.read_csv(self.metadata_path / 'floris' / 'layout_type.csv')
-        self.mean_rotor_diameters = pd.read_csv(self.metadata_path / 'floris' /'results_mean_turbine_spacing.txt', header=None)
+        self.h5_data =  h5py.File(self.metadata_path / 'syscaps' / 'wind' / 'wind_plant_data.h5', 'r')
+        self.layout_types = pd.read_csv(self.metadata_path / 'syscaps' / 'wind' / 'layout_type.csv')
+        self.mean_rotor_diameters = pd.read_csv(self.metadata_path / 'syscaps' / 'wind' /'results_mean_turbine_spacing.txt', header=None)
 
-        self.target_transform = lambda x: x / (675.195904 - 0) # max-min #BoxCoxTransform()
+        self.target_transform = lambda x: x / (675.195904 - 0) # max-min 
         self.undo_transform = lambda x: x * (675.195904 - 0)
-        #self.target_transform.load(
-        #    self.metadata_path / 'transforms' / 'floris' / 'power')
-
+        
         self.attribute_onehot_encoder = OneHotEncoder(
             handle_unknown='ignore', sparse=False,
             categories=[['cluster', 'single string', 'parallel strings', 'multiple strings'],
@@ -148,29 +160,25 @@ class WindDataset(torch.utils.data.Dataset):
             # randomly sample an augmentation style 
             style = random.choice([0,1,2,3])
             #style = 1
-            caption_dir = self.captions_path /  'floris' / \
-                self.syscaps_split / f'aug_{style}'
-            caption_tokens_dir = self.captions_path / 'floris' / \
+            caption_data = self.captions_data[style]
+            caption_tokens_dir = self.captions_path / 'wind' / \
                 self.syscaps_split / \
                     f'aug_{style}_tokens' / self.tokenizer_name
         elif self.syscaps_split == 'medium' and \
             not self.use_random_caption_augmentation:
             style = self.caption_augmentation_style
-            caption_dir = self.captions_path /  'floris' / \
-                self.syscaps_split / f'aug_{style}'
-            caption_tokens_dir = self.captions_path / 'floris' / \
+            caption_data = self.captions_data
+            caption_tokens_dir = self.captions_path / 'wind' / \
                 self.syscaps_split / \
                     f'aug_{style}_tokens' / self.tokenizer_name
         else: # basic
-            caption_dir = self.captions_path /  'floris' / \
-                self.syscaps_split
-            caption_tokens_dir = self.captions_path / 'floris' / \
+            caption_data = self.captions_data
+            caption_tokens_dir = self.captions_path / 'wind' / \
                 f'{self.syscaps_split}_tokens' / \
                 self.tokenizer_name
             
         if self.include_text:
-            with open(caption_dir / f'{layout_id}_cap.txt') as f:
-                sample['syscaps'] = f.read() # string
+            sample['syscaps'] = caption_data.loc[layout_id, 'caption']
                 
         tokenized_caption_path = caption_tokens_dir / f'{layout_id}_cap_ids.npy'
 
@@ -228,9 +236,10 @@ if __name__ == '__main__':
     from tqdm import tqdm
 
     test_data = WindDataset(
-        captions_path = Path(os.environ.get('BUILDINGS_BENCH', '')),
+        data_path = Path(os.environ.get('SYSCAPS', '')),
         index_file = 'floris_train_seed=42.idx',
         syscaps_split = 'medium',
+        caption_augmentation_style=1,
         include_text = True       
     )
 

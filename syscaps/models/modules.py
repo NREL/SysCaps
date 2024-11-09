@@ -26,7 +26,7 @@ class TimeSeriesSinusoidalPeriodicEmbedding(nn.Module):
         return self.linear(x)
 
 
-class RecurrentEncoder(nn.Module):
+class SequenceEncoder(nn.Module):
     """
     Recurrent encoder for time series inputs.
     Preserves the length of time series.
@@ -42,27 +42,27 @@ class RecurrentEncoder(nn.Module):
         output_dim: int = 128, # use 'input'/'output' if appropriate rather than 'hidden'
         num_layers: int = 1, 
         pool: List[int] = [4,4],
-        autoreg_type = 'rnn'
+        seq_type = 'rnn'
     ):
         """
         Args:
-            autoreg_type (str): 'rnn' or 'ssm'
+            seq_type (str): 'rnn' or 'ssm'
             input_dim (int): size of the input feature dim
             output_dim (int): size of the hidden state of the recurrent encoder
             num_layers (int): number of recurrent layers
         """
         super().__init__()
         self.num_layers  = num_layers
-        self.autoreg_type = autoreg_type
+        self.seq_type = seq_type
         self.output_dim = output_dim
 
         # bidirectional LSTM 
-        if autoreg_type == 'rnn':
+        if seq_type == 'rnn':
             self.encoder = nn.LSTM(input_dim,
                                 output_dim, num_layers=self.num_layers,
                                 batch_first=True, bidirectional=True)
         # bidirectional SSM
-        elif autoreg_type == 'ssm':
+        elif seq_type == 'ssm':
             self.ssm_in = nn.Linear(input_dim, output_dim)
             self.encoder = Sashimi(
                 d_model=output_dim,
@@ -82,13 +82,13 @@ class RecurrentEncoder(nn.Module):
 
         # need to project the input to the dim of the SSM encoder.
         # the SSM does not change the size of the last dim of the input.
-        if self.autoreg_type == 'ssm':
+        if self.seq_type == 'ssm':
             x = self.ssm_in(x) # [batch_size, seq_len, output_dim]
 
         # x is shape [batch_size, seq_len, dim]
         outs, _ = self.encoder(x)
         
-        if self.autoreg_type == 'rnn':
+        if self.seq_type == 'rnn':
             # outs is shape [batch_size, seq_len, 2*output_dim]            
             # take the average of hidden states for both directions to get an embedding for x
             x_embedding = torch.cat([

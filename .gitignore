@@ -21,3 +21,5 @@ results/
 notebooks/*.png
 notebooks/*.pdf
 scripts/pemami/
+scripts/data_generation/consolidate*
+scripts/data_generation/resstock

@@ -1,9 +1,9 @@
 [model]
 attribute_encoder_type = 'text'
-autoreg_type = 'ssm'
-autoreg_input_dim = 103
-autoreg_hidden_size = 128
-autoreg_num_layers = 4
+seq_type = 'ssm'
+seq_input_dim = 103
+seq_hidden_size = 128
+seq_num_layers = 4
 ssm_pool = []
 onehot_attr_input_dim = 3449
 mlp_hidden_dim = 256
@@ -16,7 +16,7 @@ ignore_attributes = false
 timestamp_embedding_size = 32
 
 [experiment]
-module_name = 'autoregressive'
+module_name = 'sequential'
 lr = 5e-5
 batch_size = 16
 max_train_steps = 200000

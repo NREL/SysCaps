@@ -16,7 +16,7 @@ import wandb
 SCRIPT_PATH = Path(os.path.realpath(__file__)).parent
 SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
 if SYSCAPS_PATH == '':
-    raise ValueError('SYSCAPS_PATH environment variable not set')
+    raise ValueError('SYSCAPS environment variable not set')
 
 # eval one model on one dataset
 def evaluate(model, dataloader, caption_split, args):
@@ -121,7 +121,7 @@ if __name__ == '__main__':
             print(f"caption split = {caption_split}")
 
             dataset =  WindDataset(
-                captions_path=Path(SYSCAPS_PATH),
+                data_path=Path(SYSCAPS_PATH),
                 index_file=args.index_file,
                 syscaps_split=caption_split if caption_split != 'onehot' else 'basic',
                 include_text = True

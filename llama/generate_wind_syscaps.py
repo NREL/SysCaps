@@ -12,8 +12,6 @@ from pathlib import Path
 
 
 def main(
-    wind_data_dir: str,
-    output_dir: str,
     ckpt_dir: str,
     tokenizer_path: str,
     temperature: float = 0.6,
@@ -23,7 +21,13 @@ def main(
     max_gen_len: Optional[int] = None,
     prompt_augmentation: Optional[str] = "with an objective tone",
 ):
-    # Wind plant attributes, fixed for this dataset
+    
+    SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
+    if SYSCAPS_PATH == '':
+        raise ValueError('SYSCAPS environment variable not set')
+    SYSCAPS_PATH = Path(SYSCAPS_PATH)
+    
+    # Wind turbine attributes that are fixed for this dataset
     rotor_diameter = 130 # meters
     rated_power = 3.4 # MW
 
@@ -55,20 +59,20 @@ def main(
         attrs += "Turbine rated power: " + str(rated_power) + " MW."
         return attrs
 
-    savedir_ = Path(output_dir) / "wind"
+    savedir_ = SYSCAPS_PATH / 'captions' / 'wind'
     if not savedir_.exists():
         os.makedirs(savedir_)
     
-    metadata = pd.read_csv(Path(wind_data_dir) / 'wind_metadata.csv')
+    metadata = pd.read_csv(SYSCAPS_PATH / 'metadata' /  'syscaps' / 'wind' / 'wind_metadata.csv')
 
-    with h5py.File(Path(wind_data_dir) / 'wind_plant_data.h5', 'r') as hf:
+    with h5py.File(SYSCAPS_PATH / 'metadata' / 'syscaps' / 'wind' / 'wind_plant_data.h5', 'r') as hf:
         for prompt_aug_idx, prompt_aug in enumerate(augment):
             # if prompt_aug_idx < 3:
             #     continue
             save_dir_aug = savedir_ / f'aug_{prompt_aug_idx}'
             if not save_dir_aug.exists():
                 os.makedirs(save_dir_aug)
-
+            captions = pd.DataFrame(columns=['Layout', 'caption'])
             layout_names = [k for k in hf.keys() if 'Layout' in k]
             for idx, layout in enumerate(layout_names):
                 
@@ -105,9 +109,11 @@ def main(
                     print("\n==================================\n")
 
                     # write to files
-                    file = open(save_dir_aug / f'{layout}_cap.txt', 'w')
-                    file.write(result['generation']['content'])
-                    file.close()
+                    # file = open(save_dir_aug / f'{layout}_cap.txt', 'w')
+                    # file.write(result['generation']['content'])
+                    # file.close()
+                    captions.loc[idx] = [layout, result['generation']['content']]
+            captions.to_csv(save_dir_aug / 'captions.csv', index=False)
                     
                 
 if __name__ == "__main__":

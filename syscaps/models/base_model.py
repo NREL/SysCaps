@@ -3,15 +3,29 @@ from typing import Tuple, Dict, Union
 from pathlib import Path
 import torch
 import torch.nn as nn
+from huggingface_hub import PyTorchModelHubMixin
 
 
-class BaseSurrogateModel(nn.Module, metaclass=abc.ABCMeta):
-    """Base surrogate model"""
-    def __init__(self, is_autoregressive: bool):
+class BaseSurrogateModel(nn.Module, PyTorchModelHubMixin, metaclass=abc.ABCMeta):
+    """Base surrogate model.
+    
+    HF model hub mixin example: 
+    
+    # Save model weights to local directory
+    >>> model.save_pretrained("my-awesome-model")
+
+    # Push model weights to the Hub
+    >>> model.push_to_hub("my-awesome-model")
+
+    # Download and initialize weights from the Hub
+    >>> model = MyModel.from_pretrained("username/my-awesome-model")
+    
+    """
+    def __init__(self, is_sequential: bool):
         """Init method for BaseSurrogateModel.
         """
         super().__init__()
-        self.is_autoregressive = is_autoregressive
+        self.is_sequential = is_sequential
     
     @abc.abstractmethod
     def forward(self, x: Dict) -> Tuple[torch.Tensor, torch.Tensor]:

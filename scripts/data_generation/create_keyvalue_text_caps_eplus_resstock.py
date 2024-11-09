@@ -19,7 +19,7 @@ if __name__ == '__main__':
     ## Env variables
     SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
     if SYSCAPS_PATH == '':
-        raise ValueError('SYSCAPS_PATH environment variable not set')
+        raise ValueError('SYSCAPS environment variable not set')
     SYSCAPS_PATH = Path(SYSCAPS_PATH)
     
     attributes = open(SYSCAPS_PATH / 'metadata' / 'attributes_resstock.txt', 'r').read().split('\n')

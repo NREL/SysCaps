@@ -21,7 +21,7 @@ import torch.nn as nn
 SCRIPT_PATH = Path(os.path.realpath(__file__)).parent
 SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
 if SYSCAPS_PATH == '':
-    raise ValueError('SYSCAPS_PATH environment variable not set')
+    raise ValueError('SYSCAPS environment variable not set')
 
 
 SYSCAPS_PATH = Path(SYSCAPS_PATH)

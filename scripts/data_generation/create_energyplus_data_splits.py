@@ -9,7 +9,8 @@ import os
 from tqdm import tqdm
 import pickle
 
-def split_building_ids(metadata_dir: Path, 
+
+def split_building_ids(base_dir: Path, 
                        resstock_comstock: str = 'comstock',
                        seed: int = 1):
     """
@@ -25,23 +26,26 @@ def split_building_ids(metadata_dir: Path,
         stock_bldgs_900k_test: withheld buildings in novel PUMAs (semantic OOD split)
 
     """
+    metadata_dir = base_dir / 'Buildings-900K' / 'end-use-load-profiles-for-us-building-stock' / '2021'
     # First, keep only buildings in the intersection of amy2018/tmy3
-    stock_amy2018 = pd.read_parquet(metadata_dir / f'{resstock_comstock}_amy2018.parquet', engine="pyarrow")
-    stock_tmy3 = pd.read_parquet(metadata_dir / f'{resstock_comstock}_tmy3.parquet', engine="pyarrow")
+    stock_amy2018 = pd.read_parquet(metadata_dir / f'{resstock_comstock}_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+    stock_tmy3 = pd.read_parquet(metadata_dir / f'{resstock_comstock}_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
     bd_ids_amy2018 = stock_amy2018.index
     bd_ids_tmy = stock_tmy3.index
-
     bd_ids_all = bd_ids_amy2018.intersection(bd_ids_tmy).values
-    if resstock_comstock == "resstock":
-        #resstock_250k_ids = pd.read_csv(metadata_dir / "resstock_250k.csv")["bldg_id"].values # randomly sampled 250k buildings (include some but not all test buildings)
-        #resstock_test_ids = pd.read_csv(metadata_dir / "resstock_test.csv")["bldg_id"].values # all test buildings
-        resstock_ids = open(metadata_dir / 'resstock_bldg_ids.txt', 'r').readlines()
-        resstock_ids = np.array([int(x) for x in resstock_ids])
-        bd_ids_all = bd_ids_all[np.isin(bd_ids_all, resstock_ids)]
+    
+    # TODO: If you want to remove specific building IDs from the splits, do it here
+    
+    # if resstock_comstock == "resstock":
+    #     resstock_ids = open(metadata_dir / 'resstock_bldg_ids.txt', 'r').readlines()
+    #     resstock_ids = np.array([int(x) for x in resstock_ids])
+    #     bd_ids_all = bd_ids_all[np.isin(bd_ids_all, resstock_ids)]
+    
+    
     # !!!!!!!
     # depending on the weather year, the same building (with same building ID) may
     # have a different PUMA ID number. 
-    # We keep train of stocks for amy2018 and tmy3 separately, thus.
+    # Keep track of building IDs for amy2018 and tmy3 separately.
     # !!!!!!!
     train_stock = stock_tmy3.loc[bd_ids_all]
     val_test_stock = stock_amy2018.loc[bd_ids_all]
@@ -58,7 +62,7 @@ def split_building_ids(metadata_dir: Path,
 
     print(f'Total buildings in {resstock_comstock} shared by AMY2018 and TMY3: {len(bd_ids_all)}...')
 
-    with open(metadata_dir / 'splits' / 'pumas_without_weather.tsv', 'r') as f:
+    with open(base_dir / 'metadata' / 'syscaps' / 'splits' / 'pumas_without_weather.tsv', 'r') as f:
         line = f.readlines()[0]
         withheld_pumas = line.strip('\n').split('\t')[:-1]
         withheld_pumas = [x.split('=')[1] for x in withheld_pumas]
@@ -70,7 +74,7 @@ def split_building_ids(metadata_dir: Path,
     print(f'removing weather-less PUMAs {withheld_pumas}, remaining buildings {resstock_comstock}: {len(train_stock)}...')
 
     # split on buildings in buildings-900K-test 
-    with open(metadata_dir / 'splits' / 'buildings_900k_test.tsv', 'r') as f:
+    with open(base_dir / 'metadata' / 'withheld_pumas.tsv', 'r') as f:
         # tab separated file
         line = f.readlines()[0]
         bldgs_900k_test = line.strip('\n').split('\t')
@@ -87,7 +91,7 @@ def split_building_ids(metadata_dir: Path,
 
     if resstock_comstock == "comstock":
         # remove buildings with withheld attribute combos
-        withheld_atts = pd.read_csv(metadata_dir / 'splits' / \
+        withheld_atts = pd.read_csv(base_dir / 'metadata' / 'syscaps' / 'splits' / \
             f'{resstock_comstock}_withheld_attribute_combos.csv', index_col='bldg_id')
         train_stock = train_stock[ ~(train_stock.index.isin(withheld_atts.index)) ]
         val_test_stock = val_test_stock[ ~(val_test_stock.index.isin(withheld_atts.index)) ]
@@ -134,9 +138,6 @@ def main(args):
         raise ValueError('Env variable syscaps is not set')
     metadata_dir = Path(base_dir, 'metadata')
     
-    #buildings_bench_dir = os.environ.get('BUILDINGS_BENCH', '')
-    #time_series_dir = Path(buildings_bench_dir, 'Buildings-900K', 'end-use-load-profiles-for-us-building-stock', '2021')
-
     # indexes for the index files
     building_years = {
         'comstock_tmy3_release_1': 0,
@@ -153,7 +154,7 @@ def main(args):
     }
     
     train, val, test, hyperparam_train, hyperparam_val, attribute_combos, buildings900k_test = \
-        split_building_ids(metadata_dir, args.resstock_comstock, args.seed)
+        split_building_ids(base_dir, args.resstock_comstock, args.seed)
     all_splits = {
         'train': train,  # tmy3 weather
         'val': val,  # amy2018
@@ -170,7 +171,7 @@ def main(args):
             continue
         fname = f'{args.resstock_comstock}_{split_name}_seed={args.seed}.idx'
         print(f'Creating index file {fname}...')
-        idx_file = open(str(metadata_dir / 'splits' / fname), 'w')
+        idx_file = open(str(metadata_dir / 'syscaps' / 'splits' / fname), 'w')
         
         split = split.sample(frac=1, random_state = args.seed)
 

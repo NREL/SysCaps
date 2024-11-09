@@ -18,7 +18,7 @@ def build(dataset, **kwargs):
 
 class ResNet(BaseSurrogateModel):
     """
-    Non-autoregressive ResNet MLP for learning to map sim inputs to outputs.
+    Non-sequential ResNet MLP for learning to map sim inputs to outputs.
     """
     def __init__(self,   
                  attribute_encoder_type: str, # 'onehot' or 'text'
@@ -33,7 +33,7 @@ class ResNet(BaseSurrogateModel):
                  text_finetune_only_specific_layers: bool,
                  continuous_head: str,
                  ignore_attributes: bool,
-                 is_autoregressive: bool = False):
+                 is_sequential: bool = False):
         """
         Args:
             attribute_encoder_type (str): 'onehot' or 'text'
@@ -46,9 +46,9 @@ class ResNet(BaseSurrogateModel):
             text_freeze_encoder (bool): whether to freeze the text encoder
             continuous_head (str): 'mse' or 'gaussian_nll'
             ignore_attributes (bool)
-            is_autoregressive (bool)
+            is_sequential (bool)
         """
-        super(ResNet,self).__init__(is_autoregressive)
+        super(ResNet,self).__init__(is_sequential)
         self.attribute_encoder_type = attribute_encoder_type 
         
         if attribute_encoder_type == 'onehot':

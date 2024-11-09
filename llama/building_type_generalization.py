@@ -73,7 +73,7 @@ def main(
     ## Env variables
     SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
 if SYSCAPS_PATH == '':
-    raise ValueError('SYSCAPS_PATH environment variable not set')
+    raise ValueError('SYSCAPS environment variable not set')
 
 
     ATTRIBUTE_CAPS_PATH = os.environ.get('ATTRIBUTE_CAPS', '')

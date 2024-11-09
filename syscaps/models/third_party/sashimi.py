@@ -237,7 +237,7 @@ class Sashimi(nn.Module):
             unet: use a unet-like architecture, adding (Residual (S4) --> Residual (FF)) layers before downpooling.
                 All else fixed, this slows down inference (and slightly slows training), but generally improves performance.
                 We use this variant when dropping in SaShiMi into diffusion models, and this should generally be preferred
-                for non-autoregressive models.
+                for non-sequential models.
             dropout: dropout rate. Default to 0.0, since we haven't found settings where SaShiMi overfits.
         """
         super().__init__()
@@ -416,7 +416,7 @@ class Sashimi(nn.Module):
 
     def setup_rnn(self, mode='dense'):
         """
-        Convert the SaShiMi model to a RNN for autoregressive generation.
+        Convert the SaShiMi model to a RNN for sequential generation.
 
         Args:
             mode: S4 recurrence mode. Using `diagonal` can speed up generation by 10-20%.

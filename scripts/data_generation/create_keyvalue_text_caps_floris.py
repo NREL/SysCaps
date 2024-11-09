@@ -15,13 +15,13 @@ if __name__ == '__main__':
 
     SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
     if SYSCAPS_PATH == '':
-        raise ValueError('SYSCAPS_PATH environment variable not set')
+        raise ValueError('SYSCAPS environment variable not set')
     SYSCAPS_PATH = Path(SYSCAPS_PATH)
 
-    attributes = open(SYSCAPS_PATH / 'metadata' / 'attributes_floris.txt', 'r').read().split('\n')
+    attributes = open(SYSCAPS_PATH / 'metadata' / 'attributes_wind.txt', 'r').read().split('\n')
     
-    savedir = SYSCAPS_PATH / 'captions' / 'floris' / 'basic'
-    savedir_tokens = SYSCAPS_PATH / 'captions' / 'floris' / 'basic_tokens' / tok_type
+    savedir = SYSCAPS_PATH / 'captions' / 'wind' / 'basic'
+    savedir_tokens = SYSCAPS_PATH / 'captions' / 'wind' / 'basic_tokens' / tok_type
 
     if not savedir.exists():
         os.makedirs(savedir)
@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     
     data_path =  SYSCAPS_PATH / 'captions' / 'wind_plant_data.h5'
-    layout_types = pd.read_csv(SYSCAPS_PATH / 'metadata' / 'floris' / 'layout_type.csv')
-    mean_rotor_diameters = pd.read_csv(SYSCAPS_PATH / 'metadata' / 'floris' /'results_mean_turbine_spacing.txt', header=None)
+    layout_types = pd.read_csv(SYSCAPS_PATH / 'metadata' / 'wind' / 'layout_type.csv')
+    mean_rotor_diameters = pd.read_csv(SYSCAPS_PATH / 'metadata' / 'wind' /'results_mean_turbine_spacing.txt', header=None)
 
     with h5py.File(data_path, 'r') as hf:
         layout_names = [k for k in hf.keys() if 'Layout' in k]

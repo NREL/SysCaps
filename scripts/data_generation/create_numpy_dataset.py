@@ -25,14 +25,14 @@ def main(args):
     # check environment variables
     SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
     if SYSCAPS_PATH == '':
-        raise ValueError('SYSCAPS_PATH environment variable not set')
+        raise ValueError('SYSCAPS environment variable not set')
 
     for split in splits:
         if split == 'train':
             if args.dataset == 'energyplus_comstock' or args.dataset == 'energyplus_resstock':
                 resstock_comstock = 'comstock' if args.dataset == 'energyplus_comstock' else 'resstock'
                 train_dataset = EnergyPlusNumpy(
-                    buildings_bench_path = Path(SYSCAPS_PATH),
+                    data_path = Path(SYSCAPS_PATH),
                     resstock_comstock = resstock_comstock,
                     index_file = args.train_idx_file,
                     return_full_year = False,
@@ -45,7 +45,7 @@ def main(args):
             
             elif args.dataset == 'wind':
                 train_dataset = WindDataset(
-                    captions_path=Path(SYSCAPS_PATH),
+                    data_path=Path(SYSCAPS_PATH),
                     index_file=args.train_idx_file
                 )
 
@@ -71,7 +71,7 @@ def main(args):
             
             elif args.dataset == 'wind':
                 val_dataset = WindDataset(
-                    captions_path=Path(SYSCAPS_PATH),
+                    data_path=Path(SYSCAPS_PATH),
                     index_file=args.val_idx_file
                 )
 
@@ -97,7 +97,7 @@ def main(args):
                 
             elif args.dataset == 'wind':
                 test_dataset = WindDataset(
-                    captions_path=Path(SYSCAPS_PATH),
+                    data_path=Path(SYSCAPS_PATH),
                     index_file=args.test_idx_file
                 )
 

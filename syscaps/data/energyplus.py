@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-#import datetime
 from pathlib import Path
 import pyarrow.parquet as pq
 import syscaps.transforms as transforms
@@ -8,7 +7,6 @@ from syscaps.transforms import BoxCoxTransform, StandardScalerTransform
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 from transformers import  DistilBertTokenizer, BertTokenizer, LongformerTokenizer
-from typing import List
 from datetime import date, datetime, timedelta, time as t
 
 
@@ -23,9 +21,9 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
     2. PUMA ID
     3. Building ID
 
-    Two main modes: non-autoregressive and autoregressive. 
+    Two main modes: non-sequential and sequential. 
 
-    Non-autoregressive mode (arg: return_full_year = False)
+    Non-sequential mode (arg: return_full_year = False)
         Randomly sample a single hour from a single random building, at a time. Batches are
         constructed by stacking multiple samples from different buildings.
         The time series are not stored chronologically and must be sorted by timestamp after loading.
@@ -33,14 +31,14 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
         weird multiprocessing errors from sharing a file pointer. We 'seek' to the correct
         line in the index file for random access.
 
-    Autoregressive mode (arg: return_full_year = True)
+    sequential mode (arg: return_full_year = True)
         Load a single year of data from a single random building, at a time. Batches are
         constructed by stacking years from different buildings.
         The time series are not stored chronologically and must be sorted by timestamp after loading.
         The entire year is loaded into memory and returned as a sequence of length 8760.    
     """
     def __init__(self, 
-                buildings_bench_path: Path,
+                data_path: Path,
                 index_file: str,
                 resstock_comstock : str = 'comstock',
                 syscaps_split : str = 'short',
@@ -50,15 +48,20 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
                 caption_template = ''):
         """
         Args:
-            buildings_bench_path (Path): Path to the pretraining dataset.
+            data_path (Path): Path to the pretraining dataset.
             index_file (str): Name of the index file
-            # TODO:
+            resstock_comstock (str): 'comstock' or 'resstock'
+            syscaps_split (str): 'short', 'medium', 'long'
+            tokenizer (str): 'distilbert-base-uncased', 'bert-base-uncased', 'longformer-base-4096'
+            return_full_year (bool): Return a full year of data for each building if True, else return a single hour
+            include_text (bool): Include the text caption in each sample dictionary
+            caption_template (str): A template for generating captions on the fly
         """
         BB_split = 'Buildings-900K-test' if 'buildings900k_test' in index_file \
             else 'Buildings-900K/end-use-load-profiles-for-us-building-stock'
-        self.buildings_bench_path = buildings_bench_path / BB_split / '2021'
-        self.captions_path = buildings_bench_path / 'captions'
-        self.metadata_path = buildings_bench_path / 'metadata'
+        self.buildings_bench_path = data_path / BB_split / '2021'
+        self.captions_path = data_path / 'captions'
+        self.metadata_path = data_path / 'metadata'
         self.caption_template = caption_template
         
         self.building_type_and_year = ['comstock_tmy3_release_1',
@@ -67,7 +70,7 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
                                        'resstock_amy2018_release_1']
         self.census_regions = ['by_puma_midwest', 'by_puma_south', 'by_puma_northeast', 'by_puma_west']
 
-        self.index_file = self.metadata_path / 'splits' / index_file
+        self.index_file = self.metadata_path / 'syscaps' / 'splits' / index_file
         self.index_fp = None
         self.__read_index_file(self.index_file)
 
@@ -76,30 +79,34 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
         self.syscaps_split = syscaps_split
         self.return_full_year = return_full_year
         self.include_text = include_text
+        if self.include_text:
+            self.captions_data = pd.read_csv(self.captions_path / self.resstock_comstock / \
+                self.syscaps_split / 'captions.csv',
+                header=0, index_col=0)
 
         self.tokenizer_name = tokenizer
         if self.tokenizer_name == "distilbert-base-uncased":
             self.tokenizer = DistilBertTokenizer.from_pretrained(self.tokenizer_name)
-            print(f'[EnergyPlusDataset] Captions with more than 512 tokens will be truncated!')
+            print('[EnergyPlusDataset] Captions with more than 512 tokens will be truncated!')
         elif self.tokenizer_name == "bert-base-uncased":
             self.tokenizer = BertTokenizer.from_pretrained(self.tokenizer_name)
-            print(f'[EnergyPlusDataset] Captions with more than 512 tokens will be truncated!')
+            print('[EnergyPlusDataset] Captions with more than 512 tokens will be truncated!')
         elif self.tokenizer_name == "longformer-base-4096":
             self.tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
-            print(f'[EnergyPlusDataset] Using longformer tokenizer, which supports up to 4096 tokens')
+            print('[EnergyPlusDataset] Using longformer tokenizer, which supports up to 4096 tokens')
 
         if self.resstock_comstock == 'comstock':
-            self.attributes = open(self.metadata_path / 'attributes_comstock.txt', 'r').read().strip().split('\n')
-            df1 = pd.read_parquet(self.metadata_path / "comstock_amy2018.parquet", engine="pyarrow")
-            df2 = pd.read_parquet(self.metadata_path / "comstock_tmy3.parquet", engine="pyarrow")
+            self.attributes = open(self.metadata_path / 'syscaps' / 'energyplus' / 'attributes_comstock.txt', 'r').read().strip().split('\n')
+            df1 = pd.read_parquet(self.buildings_bench_path / 'comstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df2 = pd.read_parquet(self.buildings_bench_path / 'comstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
             self.attribute_dfs = {
                 'comstock_amy2018_release_1': df1,
                 'comstock_tmy3_release_1': df2
             }
         else:
-            self.attributes = open(self.metadata_path / 'attributes_resstock.txt', 'r').read().strip().split('\n')
-            df1 = pd.read_parquet(self.metadata_path / "resstock_amy2018.parquet", engine="pyarrow")
-            df2 = pd.read_parquet(self.metadata_path / "resstock_tmy3.parquet", engine="pyarrow")
+            self.attributes = open(self.metadata_path / 'syscaps' / 'energyplus' / 'attributes_resstock.txt', 'r').read().strip().split('\n')
+            df1 = pd.read_parquet(self.buildings_bench_path / 'resstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df2 = pd.read_parquet(self.buildings_bench_path / 'resstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
             self.attribute_dfs = {
                 'resstock_amy2018_release_1': df1,
                 'resstock_tmy3_release_1': df2
@@ -136,7 +143,7 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
                         'direct_normal_radiation', 'diffuse_horizontal_radiation']
                                     
         self.load_transform = BoxCoxTransform()
-        self.load_transform.load(self.metadata_path / 'transforms' / resstock_comstock / 'load')
+        self.load_transform.load(self.metadata_path / 'syscaps' / 'transforms' / resstock_comstock / 'load')
 
         self.weather_transforms = []           
         for col in self.weather_feature_names[1:]:
@@ -223,20 +230,20 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
         syscaps_split = self.syscaps_split
 
         if self.include_text:
-            with open(self.captions_path /  self.resstock_comstock / \
-                syscaps_split / f'{bldg_id}_cap.txt') as f:
-                sample['syscaps'] = f.read() # string
-                # Just for evaluation purposes
-                if (self.captions_path /  self.resstock_comstock / \
-                syscaps_split / f'{bldg_id}_cap_attribute.txt').exists():
-                    with open(self.captions_path /  self.resstock_comstock / \
-                        syscaps_split / f'{bldg_id}_cap_attribute.txt') as f:
-                        sample['syscaps_missing'] = f.read().strip()
-                elif (self.captions_path /  self.resstock_comstock / \
-                (syscaps_split + '_missing') / f'{bldg_id}_cap_attribute.txt').exists():
-                    with open(self.captions_path /  self.resstock_comstock / \
-                        (syscaps_split + '_missing') / f'{bldg_id}_cap_attribute.txt') as f:
-                        sample['syscaps_missing'] = f.read().strip()
+            sample['syscaps'] = self.captions_data.loc[int(bldg_id)]['caption'] # string
+                
+            # # These are caption variants used for the extra experiments
+            # # in the paper, can be ignored
+            # if (self.captions_path /  self.resstock_comstock / \
+            # syscaps_split / f'{bldg_id}_cap_attribute.txt').exists():
+            #     with open(self.captions_path /  self.resstock_comstock / \
+            #         syscaps_split / f'{bldg_id}_cap_attribute.txt') as f:
+            #         sample['syscaps_missing'] = f.read().strip()
+            # elif (self.captions_path /  self.resstock_comstock / \
+            # (syscaps_split + '_missing') / f'{bldg_id}_cap_attribute.txt').exists():
+            #     with open(self.captions_path /  self.resstock_comstock / \
+            #         (syscaps_split + '_missing') / f'{bldg_id}_cap_attribute.txt') as f:
+            #         sample['syscaps_missing'] = f.read().strip()
 
         tokenized_caption_path = self.captions_path / self.resstock_comstock / \
                     f'{syscaps_split}_tokens' / \
@@ -300,7 +307,7 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
         else: # load a full year of data...
             hour_start = 0
             hour_end = 8759 
-            assert hour_end <= len(df), "The time series is not long enough for autoregressive mode."
+            assert hour_end <= len(df), "The time series is not long enough for sequential mode."
         
         # get county ID
         county = self.weather_lookup_df.loc[puma]['nhgis_2010_county_gisjoin']
@@ -452,8 +459,6 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
                 if self.include_text:
                     batch['syscaps'] = [s['syscaps'] for s in samples]
                     batch['building_id'] = [s['building_id'] for s in samples]
-                    if 'syscaps_missing' in samples[0]:
-                        batch['syscaps_missing'] = [s['syscaps_missing'] for s in samples]
             return batch
 
         return _collate
@@ -470,7 +475,7 @@ if __name__ == '__main__':
 
     tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
     test_data = EnergyPlusDataset(
-        buildings_bench_path = Path(os.environ.get('BUILDINGS_BENCH', '')),
+        data_path = Path(os.environ.get('SYSCAPS', '')),
         index_file = 'resstock_train_seed=42.idx',
         resstock_comstock = 'resstock',
         syscaps_split = 'medium',

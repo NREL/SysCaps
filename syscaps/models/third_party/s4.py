@@ -765,7 +765,7 @@ class Kernel(nn.Module):
             setattr(getattr(self, name), "_optim", optim)
 
     def _setup_step(self, **kwargs):
-        """Convert a model into a recurrent mode for autoregressive inference."""
+        """Convert a model into a recurrent mode for sequential inference."""
         raise NotImplementedError
 
     def step(self, x, state, **kwargs):

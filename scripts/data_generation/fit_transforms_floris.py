@@ -13,8 +13,8 @@ def main(args):
     np.random.seed(args.seed)
 
     project_dir = Path(os.environ.get('SYSCAPS', ''))
-    output_dir = project_dir / 'metadata' / 'transforms' / 'floris' / 'power'
-    wind_for_transform = project_dir / 'metadata' / 'splits' / args.floris_index_file    
+    output_dir = project_dir / 'metadata' / 'transforms' / 'wind' / 'power'
+    wind_for_transform = project_dir / 'metadata' / 'splits' / args.wind_index_file    
     data_path = project_dir / 'captions' / 'wind_plant_data.h5'
     
     print('Fitting power transform...')
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     args.add_argument('--seed', type=int, default=1, required=False,
                         help='Random seed shuffling. Default: 1')
 
-    args.add_argument('--floris_index_file', type=str, 
+    args.add_argument('--wind_index_file', type=str, 
                       default='floris_train_seed=42.idx')
     
     args = args.parse_args()

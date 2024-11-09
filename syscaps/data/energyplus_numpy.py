@@ -16,8 +16,7 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
     or a random subset of hours (e.g., 438 hours) from all buildings.
     """
     def __init__(self, 
-                buildings_bench_path: Path,
-                captions_path: Path,
+                data_path: Path,
                 index_file: str,
                 resstock_comstock : str = 'comstock',
                 return_full_year: bool = True,
@@ -25,7 +24,7 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
                 ordinal_encode: bool = False):
         """
         Args:
-            buildings_bench_path (Path): Path to the pretraining dataset.
+            data_path (Path): Path to the pretraining dataset.
             index_file (str): Name of the index file
             return_full_year (bool, optional): Return the full year of hours for each building. Defaults to True.
             hours_per_building (int, optional): Number of hours to return per building. 
@@ -34,9 +33,9 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
         """
         BB_split = 'Buildings-900K-test' if 'buildings900k_test' in index_file \
             else 'Buildings-900K/end-use-load-profiles-for-us-building-stock'
-        self.buildings_bench_path = buildings_bench_path / BB_split / '2021'
-        self.captions_path = captions_path / 'captions'
-        self.metadata_path = captions_path / 'metadata'
+        self.buildings_bench_path = data_path / BB_split / '2021'
+        self.captions_path = data_path / 'captions'
+        self.metadata_path = data_path / 'metadata'
 
         
         self.building_type_and_year = ['comstock_tmy3_release_1',
@@ -45,7 +44,7 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
                                        'resstock_amy2018_release_1']
         self.census_regions = ['by_puma_midwest', 'by_puma_south', 'by_puma_northeast', 'by_puma_west']
 
-        self.index_file = self.metadata_path / 'splits' / index_file
+        self.index_file = self.metadata_path / 'syscaps' / 'splits' / index_file
         self.index_fp = None
         self.__read_index_file(self.index_file)
 
@@ -54,17 +53,17 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
         self.return_full_year = return_full_year
         
         if self.resstock_comstock == 'comstock':
-            self.attributes = open(self.metadata_path / 'attributes_comstock.txt', 'r').read().split('\n')
-            df1 = pd.read_parquet(self.metadata_path / "comstock_amy2018.parquet", engine="pyarrow")
-            df2 = pd.read_parquet(self.metadata_path / "comstock_tmy3.parquet", engine="pyarrow")
+            self.attributes = open(self.metadata_path / 'syscaps' / 'energyplus' / 'attributes_comstock.txt', 'r').read().strip().split('\n')
+            df1 = pd.read_parquet(self.buildings_bench_path / 'comstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df2 = pd.read_parquet(self.buildings_bench_path / 'comstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
             self.attribute_dfs = {
                 'comstock_amy2018_release_1': df1,
                 'comstock_tmy3_release_1': df2
             }
         else:
-            self.attributes = open(self.metadata_path / 'attributes_resstock.txt', 'r').read().split('\n')
-            df1 = pd.read_parquet(self.metadata_path / "resstock_amy2018.parquet", engine="pyarrow")
-            df2 = pd.read_parquet(self.metadata_path / "resstock_tmy3.parquet", engine="pyarrow")
+            self.attributes = open(self.metadata_path / 'syscaps' / 'energyplus' / 'attributes_resstock.txt', 'r').read().strip().split('\n')
+            df1 = pd.read_parquet(self.buildings_bench_path / 'resstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df2 = pd.read_parquet(self.buildings_bench_path / 'resstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
             self.attribute_dfs = {
                 'resstock_amy2018_release_1': df1,
                 'resstock_tmy3_release_1': df2
@@ -107,7 +106,7 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
                         'direct_normal_radiation', 'diffuse_horizontal_radiation']
                                     
         self.load_transform = BoxCoxTransform()
-        self.load_transform.load(self.metadata_path / 'transforms' / resstock_comstock / 'load')
+        self.load_transform.load(self.metadata_path / 'syscaps' / 'transforms' / resstock_comstock / 'load')
 
         self.weather_transforms = []           
         for col in self.weather_feature_names[1:]:
@@ -120,7 +119,7 @@ class EnergyPlusNumpy(torch.utils.data.Dataset):
         if self.return_full_year:
             self.hours_per_building = 8759
         elif hours_per_building is None:
-            self.hours_per_building = 438
+            self.hours_per_building = 438 ## ~5% of the year
         else:
             self.hours_per_building = hours_per_building
 

@@ -12,7 +12,7 @@ import h5py
 ## Env variables
 SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
 if SYSCAPS_PATH == '':
-    raise ValueError('SYSCAPS_PATH environment variable not set')
+    raise ValueError('SYSCAPS environment variable not set')
 SYSCAPS_PATH = Path(SYSCAPS_PATH)
 
 if __name__ == '__main__':
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--simulator', type=str, default='energyplus_comstock',
-                        help='energyplus or floris, default = energyplus')
+                        help='energyplus or wind, default = energyplus')
     parser.add_argument('--index_files', type=str, default="all", 
                         help="index files, seperated by \",\", default = all")
     parser.add_argument('--caption_splits', type=str, default='keyvalue',
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         args.index_files = ['resstock_train_seed=42.idx', 
                             'resstock_hyperparam_train_seed=42.idx', 
                             'resstock_buildings900k_test_seed=42.idx']
-    elif args.index_files == 'all' and args.simulator == 'floris':
+    elif args.index_files == 'all' and args.simulator == 'wind':
         args.index_files = ['floris_train_seed=42.idx', 'floris_val_seed=42.idx', 'floris_test_seed=42.idx']
     else:
         args.index_files = [idx_file.strip() for idx_file in args.index_files.split(",") if idx_file != ""]
@@ -115,13 +115,14 @@ if __name__ == '__main__':
                     for bldg_id,c in zip(building_ids,encoded_captions['input_ids']):
                         np.save( savedir_ / f'{bldg_id}_cap_ids.npy', c)
             
-            elif args.simulator == 'floris':
+            elif args.simulator == 'wind':
                 for style in [0,1,2,3]:
-                    savedir = SYSCAPS_PATH / 'captions' / 'floris'
+                    savedir = SYSCAPS_PATH / 'captions' / 'wind'
                     savedir_ = savedir / cs / f'aug_{style}_tokens' / args.tokenizer
                     if not savedir_.exists():
                         os.makedirs(savedir_)
-                    data_path =  SYSCAPS_PATH / 'wind_plant_data.h5'
+                    data_path =  SYSCAPS_PATH / 'metadata' / 'syscaps' / \
+                        'wind' / 'wind_plant_data.h5'
 
                     with h5py.File(data_path, 'r') as hf:
                         layout_names = [k for k in hf.keys() if 'Layout' in k]
@@ -129,7 +130,7 @@ if __name__ == '__main__':
                         captions = []
                         for ln in layout_names:
                             captions += [
-                                open(SYSCAPS_PATH / 'captions' / 'floris' / cs /\
+                                open(SYSCAPS_PATH / 'captions' / 'wind' / cs / \
                                      f'aug_{style}' / f'{ln}_cap.txt').read()
                             ]
 

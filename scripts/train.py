@@ -167,7 +167,7 @@ def main(args):
         # check environment variables
         SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
         if SYSCAPS_PATH == '':
-            raise ValueError('SYSCAPS_PATH environment variable not set')
+            raise ValueError('SYSCAPS environment variable not set')
 
 
         # TODO: Maybe fix
@@ -221,7 +221,7 @@ def main(args):
                 index_file=experiment_args.train_idx_file,
                 resstock_comstock='comstock' if experiment_args.dataset == 'energyplus_comstock' else 'resstock',
                 syscaps_split=experiment_args.caption_dataset_split,
-                return_full_year=model.is_autoregressive,
+                return_full_year=model.is_sequential,
                 tokenizer=model_args["text_encoder_name"]
             )
             val_dataset = EnergyPlusDataset(
@@ -237,14 +237,14 @@ def main(args):
 
         elif experiment_args.dataset == 'wind':
             train_dataset = WindDataset(
-                captions_path=Path(SYSCAPS_PATH),
+                data_path=Path(SYSCAPS_PATH),
                 index_file=experiment_args.train_idx_file,
                 syscaps_split=experiment_args.caption_dataset_split,
                 use_random_caption_augmentation=(not experiment_args.disable_random_caption_augmentation),
                 caption_augmentation_style=experiment_args.caption_augmentation_style,
             )
             val_dataset = WindDataset(
-                captions_path=Path(SYSCAPS_PATH),
+                data_path=Path(SYSCAPS_PATH),
                 index_file=experiment_args.val_idx_file,
                 syscaps_split=experiment_args.caption_dataset_split,
                 use_random_caption_augmentation=(not experiment_args.disable_random_caption_augmentation),

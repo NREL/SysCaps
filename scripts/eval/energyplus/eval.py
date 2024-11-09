@@ -6,7 +6,6 @@ from syscaps import utils
 import torch 
 from tqdm import tqdm
 import tomli
-import numpy as np
 import argparse
 from pathlib import Path 
 import os
@@ -16,7 +15,7 @@ import wandb
 SCRIPT_PATH = Path(os.path.realpath(__file__)).parent
 SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
 if SYSCAPS_PATH == '':
-    raise ValueError('SYSCAPS_PATH environment variable not set')
+    raise ValueError('SYSCAPS environment variable not set')
 
 # eval one model on one dataset
 def evaluate(model, dataloader, args):

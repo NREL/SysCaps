@@ -29,7 +29,7 @@ if __name__ == '__main__':
     SYSCAPS_PATH = Path(SYSCAPS_PATH)
 
     opt_yaw_list = pd.read_csv(
-        SYSCAPS_PATH / 'metadata' / 'floris' / 'opt_yaw_list.csv', 
+        SYSCAPS_PATH / 'metadata' / 'wind' / 'opt_yaw_list.csv', 
         names=['layout_id', 'scenario_id'])
     
     train_layouts, train_scenarios = [], []

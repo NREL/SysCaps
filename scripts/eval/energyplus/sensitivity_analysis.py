@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 SCRIPT_PATH = Path(os.path.realpath(__file__)).parent
 SYSCAPS_PATH = os.environ.get('SYSCAPS', '')
 if SYSCAPS_PATH == '':
-    raise ValueError('SYSCAPS_PATH environment variable not set')
+    raise ValueError('SYSCAPS environment variable not set')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

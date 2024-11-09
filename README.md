@@ -1,4 +1,4 @@
-# SysCaps: System Captions 
+# SysCaps: TODO
 
 Clone this repository and install it in editable mode in a conda environment.
 
@@ -13,11 +13,11 @@ pip install -e .
 
 You should have an NVIDIA GPU available to do the install and run the code.
 
-#### Dependencies for S4
+#### Install CUDA kernels for the SSM
 
 See https://github.com/state-spaces/s4/tree/main#structured-kernels. Ensure your $CUDA_HOME environment variable is properly set and gcc is available and up to date. On Kestrel, $CUDA_HOME is `/nopt/cuda/12.3` and you may need to run `module load gcc`.
 
-Navigate to syscaps/models/third_party/extensions/kernels and run the following command:
+Navigate to `syscaps/models/third_party/extensions/kernels` and run the following command:
 
 ```bash
 python setup.py install
@@ -63,7 +63,7 @@ TODO: See `scripts/training_caption_attribute_classifier.py`.
 
 ## Surrogate model training
 
-See `scrips/train.sh`.
+See `scripts/train.sh`.
 
 The script `scripts/train.py` is implemented with PyTorch `DistributedDataParallel` so it must be launched with `torchrun` from the command line and the argument `--disable_slurm` must be passed.
 

@@ -5,27 +5,28 @@ import torch.nn.functional as F
 from typing import Tuple, Dict, List
 from syscaps.models.base_model import BaseSurrogateModel
 from syscaps.models.modules import TimeSeriesSinusoidalPeriodicEmbedding
-from syscaps.models.modules import RecurrentEncoder, TextEncoder, OneHotAttributeEncoder, IgnoreOneHotAttributes
+from syscaps.models.modules import SequenceEncoder, TextEncoder, OneHotAttributeEncoder, IgnoreOneHotAttributes
+
 
 def build(dataset, **kwargs):
-    """Builds a EnergyPlusAutoregressive model."""
-    return EnergyPlusAutoregressive(**kwargs)
+    """Builds a EnergyPlusSequential model."""
+    return EnergyPlusSequential(**kwargs)
     
         
-class Autoregressive(BaseSurrogateModel):
-    """ Autoregressive model for learning to map sim inputs to outputs.
+class Sequential(BaseSurrogateModel):
+    """ Sequential model for learning to map sim inputs to outputs.
 
-        Supports both rnn and ssm autoregressive models.
-        Supports both onehot and text attributes.
+        Supports both rnn and ssm sequential models.
+        Supports both onehot and text input attributes.
 
         Uses default PyTorch param initialization for Linear layers.
     """
     def __init__(self, 
                  attribute_encoder_type: str, # 'onehot' or 'text'                 
-                 autoreg_type: str, # 'rnn' or 'ssm'
-                 autoreg_input_dim: int,
-                 autoreg_hidden_size: int,
-                 autoreg_num_layers: int,
+                 seq_type: str, # 'rnn' or 'ssm'
+                 seq_input_dim: int,
+                 seq_hidden_size: int,
+                 seq_num_layers: int,
                  ssm_pool: List[int],
                  onehot_attr_input_dim: int,
                  mlp_hidden_dim: int,
@@ -35,22 +36,24 @@ class Autoregressive(BaseSurrogateModel):
                  text_finetune_only_specific_layers: bool,
                  continuous_head: str,
                  ignore_attributes: bool,
-                 is_autoregressive: bool = True):
+                 is_sequential: bool = True):
         """
         Args:
             attribute_encoder_type (str): 'onehot' or 'text'
-            autoreg_type (str): 'rnn' or 'ssm'
-            autoreg_input_dim (int): dimension of the input to the autoreg model
-            autoreg_hidden_size (int): dimension of the hidden state of the autoreg model
-            autoreg_num_layers (int): number of layers in the autoreg model
+            seq_type (str): 'rnn' or 'ssm'
+            seq_input_dim (int): dimension of the input to the sequential model
+            seq_hidden_size (int): dimension of the hidden state of the sequential model
+            seq_num_layers (int): number of layers in the sequential model
             onehot_attr_input_dim (int): dimension of the onehot attribute input
             mlp_hidden_dim (int): dimension of the hidden layer in the MLP
             qoi_dim (int): dimension of the sim output
             text_encoder_name (str): name of the text encoder
             text_freeze_encoder (bool): whether to freeze the text encoder
             continuous_head (str): 'mse' or 'gaussian_nll'
+            ignore_attributes (bool): whether to ignore the attributes
+            is_sequential (bool): whether the model is sequential
         """
-        super(Autoregressive,self).__init__(is_autoregressive)
+        super(Sequential,self).__init__(is_sequential)
         self.attribute_encoder_type = attribute_encoder_type
         
         if attribute_encoder_type == 'onehot':
@@ -79,19 +82,19 @@ class Autoregressive(BaseSurrogateModel):
             )
             attr_output_dim = self.attr_encoder.output_dim
 
-        self.autoreg_encoder = RecurrentEncoder(
-            autoreg_type = autoreg_type,
+        self.seq_encoder = SequenceEncoder(
+            seq_type = seq_type,
             pool = ssm_pool,
-            input_dim = autoreg_input_dim + attr_output_dim,
-            output_dim = autoreg_hidden_size,
-            num_layers = autoreg_num_layers
+            input_dim = seq_input_dim + attr_output_dim,
+            output_dim = seq_hidden_size,
+            num_layers = seq_num_layers
         )
 
         # mlp + linear readout
         self.continuous_head = continuous_head
         out_dim = qoi_dim if self.continuous_head == 'mse' else qoi_dim*2        
         self.mlp = nn.Sequential(
-            nn.Linear(autoreg_hidden_size, mlp_hidden_dim),
+            nn.Linear(seq_hidden_size, mlp_hidden_dim),
             nn.GELU(),
             nn.Linear(mlp_hidden_dim, out_dim)
         )     
@@ -122,7 +125,7 @@ class Autoregressive(BaseSurrogateModel):
             g = g.repeat(1, seq_len, 1)
        
         # either rnn or ssm
-        ht = self.autoreg_encoder(torch.cat((x_exog, g), dim=2))
+        ht = self.seq_encoder(torch.cat((x_exog, g), dim=2))
         return self.mlp(ht)
 
     def predict(self, x: Dict) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -135,13 +138,13 @@ class Autoregressive(BaseSurrogateModel):
             return F.gaussian_nll_loss(x[:, :, 0].unsqueeze(2), y,
                                        F.softplus(x[:, :, 1].unsqueeze(2)) **2)
         
-class EnergyPlusAutoregressive(Autoregressive):
+class EnergyPlusSequential(Sequential):
     def __init__(self,
                  attribute_encoder_type: str = 'text', # 'onehot' or 'text'                 
-                 autoreg_type: str = 'rnn', # 'rnn' or 'ssm'
-                 autoreg_input_dim: int = 103,
-                 autoreg_hidden_size = 256,
-                 autoreg_num_layers = 1,
+                 seq_type: str = 'rnn', # 'rnn' or 'ssm'
+                 seq_input_dim: int = 103,
+                 seq_hidden_size = 256,
+                 seq_num_layers = 1,
                  ssm_pool = [4,4],
                  onehot_attr_input_dim: int = 336,
                  mlp_hidden_dim = 128,
@@ -155,10 +158,10 @@ class EnergyPlusAutoregressive(Autoregressive):
     ):
         super().__init__(
             attribute_encoder_type,
-            autoreg_type,
-            autoreg_input_dim,
-            autoreg_hidden_size,
-            autoreg_num_layers,
+            seq_type,
+            seq_input_dim,
+            seq_hidden_size,
+            seq_num_layers,
             ssm_pool,
             onehot_attr_input_dim,
             mlp_hidden_dim,
@@ -191,7 +194,7 @@ class EnergyPlusAutoregressive(Autoregressive):
         ], dim=2)
 
         seq_len = x_exog.shape[1]
-        if self.autoreg_encoder.autoreg_type == 'ssm':
+        if self.seq_encoder.seq_type == 'ssm':
             # pad to next multiple of N=16
             N=16
             pad_len = seq_len % N
@@ -206,6 +209,6 @@ class EnergyPlusAutoregressive(Autoregressive):
                         'attention_mask': batch["attributes_attention_mask"]}  
 
         out = super().forward(x_exog, y_onehot, y_text)
-        if self.autoreg_encoder.autoreg_type == 'ssm':
+        if self.seq_encoder.seq_type == 'ssm':
             out = out[:,:seq_len]
         return out
