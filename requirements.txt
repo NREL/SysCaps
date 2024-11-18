@@ -12,4 +12,5 @@ jupyterlab
 einops
 pytorch-lightning==2.0.4
 transformers
+datasets
 h5py

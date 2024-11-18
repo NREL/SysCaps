@@ -20,6 +20,7 @@ WORK.md
 results/
 notebooks/*.png
 notebooks/*.pdf
+notebooks/dev/
 scripts/pemami/
 scripts/data_generation/consolidate*
 scripts/data_generation/resstock

@@ -71,7 +71,7 @@ if __name__ == '__main__':
                     os.makedirs(savedir_)
 
                 dataset = EnergyPlusDataset(
-                                buildings_bench_path=Path(SYSCAPS_PATH),
+                                data_path=Path(SYSCAPS_PATH),
                                 index_file=idxf,
                                 resstock_comstock=dataset,
                                 syscaps_split=cs,

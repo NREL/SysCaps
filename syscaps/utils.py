@@ -1,7 +1,6 @@
 import numpy as np
 import random 
 import torch
-import torch.distributed as dist
 import os 
 import datetime 
 
@@ -90,26 +89,3 @@ def time_features_to_datetime(time_features: np.ndarray,
     return np.array([datetime.datetime(year, 1, 1, 0, 0, 0) +   # January 1st
                     datetime.timedelta(days=int(doy-1), hours=int(hod), minutes=0, seconds=0)
                     for doy, hod in zip(day_of_year, hour_of_day)])   
-
-
-class AllGatherFunction(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, tensor: torch.Tensor, reduce_dtype: torch.dtype = torch.float32):
-        ctx.reduce_dtype = reduce_dtype
-
-        output = list(torch.empty_like(tensor) for _ in range(dist.get_world_size()))
-        dist.all_gather(output, tensor)
-        output = torch.cat(output, dim=0)
-        return output
-
-    @staticmethod
-    def backward(ctx, grad_output: torch.Tensor):
-        grad_dtype = grad_output.dtype
-        input_list = list(grad_output.to(ctx.reduce_dtype).chunk(dist.get_world_size()))
-        grad_input = torch.empty_like(input_list[dist.get_rank()])
-        dist.reduce_scatter(grad_input, input_list)
-        return grad_input.to(grad_dtype)
-
-
-def all_gather(tensor):
-    return AllGatherFunction.apply(tensor)

@@ -21,22 +21,6 @@ SYSCAPS_PATH = Path(SYSCAPS_PATH)
 
 # eval one model on one dataset 
 def evaluate(model, dataloader, caption_split, args):
-    # building_types = {
-    #     'FullServiceRestaurant': 'FineDiningRestaurant',
-    #     'RetailStripmall': 'ShoppingCenter',
-    #     'Warehouse': 'Big Box Store',
-    #     'RetailStandalone': 'ConvenienceStore',
-    #     'SmallOffice': 'Co-WorkingSpace',
-    #     'PrimarySchool': 'ElementarySchool',
-    #     'MediumOffice': 'Workplace',
-    #     'SecondarySchool': 'HighSchool',
-    #     'Outpatient': 'MedicalClinic',
-    #     'QuickServiceRestaurant': 'FastFoodRestaurant',
-    #     'LargeOffice': 'OfficeTower',
-    #     'LargeHotel': 'Five-Star Hotel',
-    #     'SmallHotel': ['Bed and Breakfast', 'Motel'],
-    #     'Hospital': 'HealthcareFacility'
-    # }
 
     building_types = ['FullServiceRestaurant','RetailStripmall','Warehouse', 'RetailStandalone',
                    'SmallOffice', 'PrimarySchool', 'MediumOffice', 'SecondarySchool',
@@ -154,7 +138,7 @@ if __name__ == '__main__':
                 print(f"caption split = {caption_split}")
 
                 dataset = EnergyPlusDataset(
-                    buildings_bench_path=SYSCAPS_PATH,
+                    data_path=SYSCAPS_PATH,
                     index_file=index_file,
                     resstock_comstock='comstock',
                     syscaps_split=caption_split if caption_split != 'onehot' else 'keyvalue',

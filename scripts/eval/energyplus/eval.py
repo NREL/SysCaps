@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--resstock_comstock', type=str, default='comstock', required=True)
     parser.add_argument('--model_fnames', type=str, required=True, 
                         help="model file names seperated by \",\"")
-    parser.add_argument("--ckpt_dir", type=str, required=True, 
+    parser.add_argument('--ckpt_dir', type=str, required=True, 
                         help="directory of saved checkpoints")
     parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--index_files', type=str, default="all", 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
                 print(f"caption split = {caption_split}")
 
                 dataset = EnergyPlusDataset(
-                    buildings_bench_path=Path(SYSCAPS_PATH),
+                    data_path=Path(SYSCAPS_PATH),
                     index_file=index_file,
                     resstock_comstock=args.resstock_comstock,
                     syscaps_split=caption_split if caption_split != 'onehot' else 'keyvalue',

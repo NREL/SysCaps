@@ -1,46 +1,30 @@
-## Model training
+## Grid search hyperparameter sweep 
 
-See `scripts/train.sh`.
+Create a TOML file called `{caption_split}/{model_name}_hyperopt.toml` in the `configs` directory. Use a list to specify the hyperparameters to perform a grid search over. For example, to perform a grid search over the learning rate and batch size for the `medium/SSM_bert` model, create the following file `configs/energyplus_comstock/medium/SSM_bert_hyperopt.toml` with only these lines:
 
-The script `scripts/train.py` is implemented with PyTorch `DistributedDataParallel` so it must be launched with `torchrun` from the command line and the argument `--disable_slurm` must be passed.
+```toml
+[experiment]
+lr = [0.001, 0.01, 0.1]
+batch_size = [16, 32, 64]
+```
 
+Then provide this file as an argument to `scripts/train.py`: 
 
 ```bash
-#!/bin/bash
-
-export WORLD_SIZE=1
-NUM_GPUS=1
-
 torchrun \
     --nnodes=1 \
-    --nproc_per_node=$NUM_GPUS \
+    --nproc_per_node=1 \
     --rdzv-backend=c10d \
     --rdzv-endpoint=localhost:0 \
     scripts/train.py \
-    --model LSTM --dataset energyplus_comstock --train_idx_file comstock_train_seed=42.idx --val_idx_file comstock_val_seed=42.idx --caption_dataset_split short --random_seed 1234 --disable_slurm
-```
-
-The argument `--disable_slurm` is not needed if you are running this script on a Slurm cluster as a batch job. 
-
-This script will automatically log outputs to `wandb` if the environment variables `WANDB_ENTITY` and `WANDB_PROJECT` are set. Otherwise, pass the argument `--disable_wandb` to disable logging to `wandb`.
-
-
-#### With SLURM
-
-To launch training as a SLURM batch job:
-
-```bash
-export WORLD_SIZE=$(($SLURM_NNODES * $SLURM_NTASKS_PER_NODE))
-echo "WORLD_SIZE="$WORLD_SIZE
-export MASTER_PORT=$(expr 10000 + $(echo -n $SLURM_JOBID | tail -c 4))
-
-echo "NODELIST="${SLURM_NODELIST}
-master_addr=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
-export MASTER_ADDR=$master_addr
-echo "MASTER_ADDR="$MASTER_ADDR
-
-srun python3 scripts/train.py \
---model LSTM --dataset energyplus_comstock --train_idx_file comstock_train_seed=42.idx --val_idx_file comstock_val_seed=42.idx --caption_dataset_split short --random_seed 1234 --disable_slurm
+        --model medium/SSM_bert \ 
+        --hyperopt_file medium/SSM_bert_hyperopt.toml \
+        --dataset energyplus_comstock \ 
+        --train_idx_file comstock_train_seed=42.idx \ 
+        --val_idx_file comstock_val_seed=42.idx \
+        --caption_dataset_split medium \  
+         --random_seed 1234 \
+         --disable_slurm
 ```
 
 ## Replicating the preprocessing steps
@@ -66,7 +50,7 @@ Fit the BoxCox transform using an index file:
 python3 scripts/data_generation/fit_load_transform.py --energyplus_index_file comstock_hyperparam_train_seed=42.idx
 ```
 
-This outputs the BoxCox pkl file to `$PROJECT/metadata/transforms/load`. Fit the weather transform using an index file:
+This outputs the BoxCox pkl file to `<SYSCAPS>/metadata/transforms/load`. Fit the weather transform using an index file:
 
 ```bash
 python3 scripts/data_generation/fit_weather_transform.py --energyplus_index_file comstock_hyperparam_train_seed=42.idx

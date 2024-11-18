@@ -41,7 +41,7 @@ setup(
                              exclude=['test']),
       package_data={'syscaps': ['configs/*.toml']},
       license='BSD 3-Clause',
-      python_requires='>=3.8',
+      python_requires='>=3.9',
       keywords=['surrogates', 'energy', 'buildings'],
       classifiers=[
             "Development Status :: 3 - Alpha",

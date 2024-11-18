@@ -170,12 +170,10 @@ def main(args):
             raise ValueError('SYSCAPS environment variable not set')
 
 
-        # TODO: Maybe fix
-        # !THIS WILL AUTO LOAD/SAVE to your own checkpoints subdir.
-        username = os.getenv("USER")
-        checkpoint_dir = SCRIPT_PATH / '..' / 'checkpoints' / username
+        checkpoint_dir = SCRIPT_PATH / '..' / 'checkpoints'
         encoder_type, model_name = experiment_args.model.split('/')
         checkpoint_name = f'{model_name}_{experiment_args.dataset}_{encoder_type}_seed={experiment_args_.random_seed}'
+        
         # Make sure you update the experiment_args.note
         if experiment_args.rank == 0:
            
@@ -215,20 +213,21 @@ def main(args):
         #################### Dataset setup ####################
         inverse_normalization_for_qoi_predictions = lambda x: x
 
+        syscaps_split = experiment_args.model.split('/')[0]
         if experiment_args.dataset == 'energyplus_comstock' or experiment_args.dataset == 'energyplus_resstock':
             train_dataset = EnergyPlusDataset(
-                buildings_bench_path=Path(SYSCAPS_PATH),
+                data_path=Path(SYSCAPS_PATH),
                 index_file=experiment_args.train_idx_file,
                 resstock_comstock='comstock' if experiment_args.dataset == 'energyplus_comstock' else 'resstock',
-                syscaps_split=experiment_args.caption_dataset_split,
+                syscaps_split=syscaps_split,
                 return_full_year=model.is_sequential,
                 tokenizer=model_args["text_encoder_name"]
             )
             val_dataset = EnergyPlusDataset(
-                buildings_bench_path=Path(SYSCAPS_PATH),
+                data_path=Path(SYSCAPS_PATH),
                 index_file=experiment_args.val_idx_file,
                 resstock_comstock='comstock' if experiment_args.dataset == 'energyplus_comstock' else 'resstock',
-                syscaps_split=experiment_args.caption_dataset_split,
+                syscaps_split=syscaps_split,
                 return_full_year=True,
                 include_text = True,
                 tokenizer=model_args["text_encoder_name"]
@@ -239,14 +238,14 @@ def main(args):
             train_dataset = WindDataset(
                 data_path=Path(SYSCAPS_PATH),
                 index_file=experiment_args.train_idx_file,
-                syscaps_split=experiment_args.caption_dataset_split,
+                syscaps_split=syscaps_split,
                 use_random_caption_augmentation=(not experiment_args.disable_random_caption_augmentation),
                 caption_augmentation_style=experiment_args.caption_augmentation_style,
             )
             val_dataset = WindDataset(
                 data_path=Path(SYSCAPS_PATH),
                 index_file=experiment_args.val_idx_file,
-                syscaps_split=experiment_args.caption_dataset_split,
+                syscaps_split=syscaps_split,
                 use_random_caption_augmentation=(not experiment_args.disable_random_caption_augmentation),
                 caption_augmentation_style=experiment_args.caption_augmentation_style,
                 include_text = True
@@ -304,7 +303,7 @@ def main(args):
         if experiment_args.resume_from_checkpoint != '':
             model, optimizer, scheduler, step , best_val_loss, patience_counter = utils.load_model_checkpoint(
                 checkpoint_dir / experiment_args.resume_from_checkpoint, model, local_rank, optimizer, scheduler)
-            print(f'successfully loaded model checkpoint {username}/{experiment_args.resume_from_checkpoint}...')
+            print(f'successfully loaded model checkpoint {experiment_args.resume_from_checkpoint}...')
             epoch = max_train_steps // len(train_dataset) # how many times have we passed over all buidings?
         else:
             step = 0
@@ -436,9 +435,6 @@ if __name__ == '__main__':
     parser.add_argument('--early_stopping_patience', type=int, default=5,
                         help='Number of validation rounds without validation loss improvement'
                              'before early stopping.')
-    #parser.add_argument('--ignore_scoring_rules', action='store_true',
-    #                    help='Do not compute a scoring rule for this model.')
-    
     parser.add_argument('--resume_from_checkpoint', type=str, default='')
     parser.add_argument('--wandb_run_id', type=str, default='')
 
@@ -484,8 +480,9 @@ if __name__ == '__main__':
                         help='Name of index files for training')
     parser.add_argument('--val_idx_file', type=str, default='',
                         help='Name of index files for validation')
-    parser.add_argument('--caption_dataset_split', type=str, default='short',
-                        choices=['keyvalue', 'short', 'medium', 'long'])
+    #parser.add_argument('--caption_dataset_split', type=str, default='short',
+    #                    choices=['keyvalue', 'short', 'medium', 'long'],
+    #                    help='ignored if using onehot models')
     
     ## wind only
     parser.add_argument('--caption_augmentation_style', type=int, default=1,

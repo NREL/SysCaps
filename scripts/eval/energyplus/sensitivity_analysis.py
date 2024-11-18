@@ -122,7 +122,7 @@ if __name__ == '__main__':
             for index_file in args.index_files:
                 # given a building, plot actual vs. predicted load
                 dataset = EnergyPlusDataset(
-                    buildings_bench_path=Path(SYSCAPS_PATH),
+                    data_path=Path(SYSCAPS_PATH),
                     index_file=index_file,
                     resstock_comstock='comstock',
                     syscaps_split=caption_split,
