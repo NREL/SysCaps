@@ -1,4 +1,4 @@
-from transformers import DistilBertTokenizer, BertTokenizer, LongformerTokenizer
+from transformers import DistilBertTokenizer, BertTokenizer, LongformerTokenizer, AutoTokenizer
 from syscaps.data.energyplus import EnergyPlusDataset
 from syscaps import utils
 from pathlib import Path
@@ -51,7 +51,9 @@ if __name__ == '__main__':
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
     elif args.tokenizer == 'longformer-base-4096':
         tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
-
+    elif args.tokenizer == 'sup-simcse-roberta-large':
+        tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/sup-simcse-roberta-large")
+        
     for idxf in args.index_files:
         for cs in args.caption_splits:
             
@@ -71,19 +73,19 @@ if __name__ == '__main__':
                     os.makedirs(savedir_)
 
                 dataset = EnergyPlusDataset(
-                                data_path=Path(SYSCAPS_PATH),
-                                index_file=idxf,
-                                resstock_comstock=dataset,
-                                syscaps_split=cs,
-                                tokenizer = args.tokenizer,
-                                return_full_year = True,
-                                include_text = True
+                    data_path=Path(SYSCAPS_PATH),
+                    index_file=idxf,
+                    resstock_comstock=dataset,
+                    syscaps_split=cs,
+                    tokenizer = args.tokenizer,
+                    return_full_year = True,
+                    include_text = True
                 )
                 dataloader = torch.utils.data.DataLoader(
                     dataset,
                     batch_size=512,
                     drop_last=False,
-                    num_workers = 16,
+                    num_workers = 8,
                     worker_init_fn=utils.worker_init_fn,
                     collate_fn=dataset.collate_fn())
 

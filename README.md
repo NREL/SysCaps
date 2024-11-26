@@ -35,8 +35,7 @@ If you are starting from scratch, we recommend using the following script to dow
 bash prepare_data.sh <DATA_DIR>
 ```
 
-This will download and untar the BuildingsBench datasets (see the [BuildingsBench docs](https://nrel.github.io/BuildingsBench/getting_started/) for more info about this) into `DATA_DIR`, as well as the SysCaps-specific data and metadata from [HuggingFace](https://huggingface.co/datasets/NREL/SysCaps).
-All of the data and metadata will be stored under `$DATA_DIR/BuildingsBench`:
+The script will download and untar the BuildingsBench datasets (see the [BuildingsBench docs](https://nrel.github.io/BuildingsBench/getting_started/) for more info about this) into `DATA_DIR`, as well as the SysCaps-specific data and metadata from [HuggingFace](https://huggingface.co/datasets/NREL/SysCaps). This uses `huggingface_hub`, so you'll have to have this installed in your Python environment first. All of the data and metadata will be stored under `$DATA_DIR/BuildingsBench`:
 
 Folder organization:
 

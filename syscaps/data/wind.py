@@ -12,9 +12,13 @@ class WindDataset(torch.utils.data.Dataset):
 
     the index file is a tab separated file with the following columns:
 
-    layout_id scenario_id 
+        `layout_id scenario_id`
 
-    and specifies the scenarios for train/val/test.
+    Style augmentation: 
+        - 0: with an objective tone. Creative paraphrasing is acceptable 
+        - 1: with an objective tone
+        - 2: to a colleague 
+        - 3: to a classroom
     """
     def __init__(self, 
                 data_path: Path,
@@ -45,10 +49,12 @@ class WindDataset(torch.utils.data.Dataset):
                     header=0, index_col=0)
         elif self.syscaps_split == 'medium' and self.include_text:
             self.captions_data = pd.read_csv(self.captions_path / 'wind' / \
-                self.syscaps_split / f'aug_{self.caption_augmentation_style}' / 'captions.csv', header=0, index_col=0)
+                self.syscaps_split / f'aug_{self.caption_augmentation_style}' / 'captions.csv',
+                header=0, index_col=0)
         elif self.include_text:
             self.captions_data = pd.read_csv(self.captions_path / 'wind' / \
-                self.syscaps_split / 'captions.csv', header=0, index_col=0)
+                self.syscaps_split / 'captions.csv',
+                header=0, index_col=0)
             
         self.index_file = self.metadata_path / 'syscaps' / 'splits' / index_file
         self.index_fp = None
@@ -105,7 +111,8 @@ class WindDataset(torch.utils.data.Dataset):
     def __del__(self):
         if self.index_fp:
             self.index_fp.close()   
-        self.h5_data.close()
+        # Patrick: Commented out, was throwing TypeError: bad operand type for unary ~: 'NoneType'
+        #self.h5_data.close()
 
     def __len__(self):
         return self.num_datapoints
@@ -159,26 +166,29 @@ class WindDataset(torch.utils.data.Dataset):
             self.use_random_caption_augmentation:
             # randomly sample an augmentation style 
             style = random.choice([0,1,2,3])
-            #style = 1
-            caption_data = self.captions_data[style]
+            if self.include_text:
+                #style = 1
+                caption_data = self.captions_data[style]
             caption_tokens_dir = self.captions_path / 'wind' / \
                 self.syscaps_split / \
                     f'aug_{style}_tokens' / self.tokenizer_name
         elif self.syscaps_split == 'medium' and \
             not self.use_random_caption_augmentation:
             style = self.caption_augmentation_style
-            caption_data = self.captions_data
+            if self.include_text:
+                caption_data = self.captions_data
             caption_tokens_dir = self.captions_path / 'wind' / \
                 self.syscaps_split / \
                     f'aug_{style}_tokens' / self.tokenizer_name
         else: # basic
-            caption_data = self.captions_data
+            if self.include_text:
+                caption_data = self.captions_data
             caption_tokens_dir = self.captions_path / 'wind' / \
                 f'{self.syscaps_split}_tokens' / \
                 self.tokenizer_name
             
         if self.include_text:
-            sample['syscaps'] = caption_data.loc[layout_id, 'caption']
+            sample['syscaps'] = caption_data.loc[layout_num, 'caption']
                 
         tokenized_caption_path = caption_tokens_dir / f'{layout_id}_cap_ids.npy'
 
@@ -239,6 +249,7 @@ if __name__ == '__main__':
         data_path = Path(os.environ.get('SYSCAPS', '')),
         index_file = 'floris_train_seed=42.idx',
         syscaps_split = 'medium',
+        use_random_caption_augmentation=True,
         caption_augmentation_style=1,
         include_text = True       
     )

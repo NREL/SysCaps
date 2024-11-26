@@ -18,6 +18,7 @@ if __name__ == '__main__':
                         help="directory of saved checkpoints")
     parser.add_argument('--map_location', type=str, default='cuda:0',
                         help='map location argument for torch.load')
+
     
     args = parser.parse_args()
 

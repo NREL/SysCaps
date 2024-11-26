@@ -6,11 +6,11 @@ from syscaps import utils
 import torch 
 from tqdm import tqdm
 import tomli
-import numpy as np
 import argparse
 from pathlib import Path 
 import os
 import wandb
+import pandas as pd
 
 
 SCRIPT_PATH = Path(os.path.realpath(__file__)).parent
@@ -70,12 +70,12 @@ if __name__ == '__main__':
                         help="directory of saved checkpoints")
     parser.add_argument('--index_file', type=str, default='floris_test_seed=42.idx')
     parser.add_argument('--model', type=str, required=True,
-                        help='Ex: {onehot/basic/medium}/ResNet')
+                        help='Ex: {onehot/keyvalue/medium}/ResNet')
     parser.add_argument('--device', type=str, default="cuda:0")
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--caption_splits', type=str, default='onehot',
                         help='caption splits, separate by \",\", default = onehot')    
-    parser.add_argument('--wandb_project', type=str, default='attribute-caps-wind-eval',
+    parser.add_argument('--wandb_project', type=str, default='',
                         help='wandb project name for these eval runs')
     args = parser.parse_args()
 
@@ -96,13 +96,13 @@ if __name__ == '__main__':
 
     # grab the custom model args as set in the config file
     model_args = toml_args['model']
-    model = model_factory(toml_args['experiment']['module_name'], 'wind', model_args)
+    model = model_factory(toml_args['experiment']['module_name'], 'wind',
+                          model_args)
     model = model.to(args.device)
 
     # checkpoint directory
     ckpt_dir = Path(args.ckpt_dir)
 
-    #wandb_project = os.environ.get('WANDB_PROJECT', '')
     run = wandb.init(
         project=args.wandb_project,
         notes=args.model,
@@ -110,6 +110,7 @@ if __name__ == '__main__':
 
     column_names = ['model', 'dataset', 'caption']
     row_data = []
+    
     i = 0
     for caption_split in args.caption_splits:
         for model_fname in args.model_fnames:
@@ -123,7 +124,9 @@ if __name__ == '__main__':
             dataset =  WindDataset(
                 data_path=Path(SYSCAPS_PATH),
                 index_file=args.index_file,
-                syscaps_split=caption_split if caption_split != 'onehot' else 'basic',
+                syscaps_split=caption_split if caption_split != 'onehot' else 'keyvalue',
+                use_random_caption_augmentation=False, # turn off augmentation for testing
+                caption_augmentation_style=1, # style = with an objective tone
                 include_text = True
             )
             inverse_normalization_for_qoi_predictions = dataset.undo_transform
@@ -153,5 +156,14 @@ if __name__ == '__main__':
             i += 1
     table = wandb.Table(columns=column_names, data=row_data)
     wandb.log({args.eval_name: table})
-
+    # create a pandas dataframe for the table
+    for row in row_data:
+        for i in range(len(row)):
+            if isinstance(row[i], torch.Tensor):
+                row[i] = row[i].cpu().item()
+    #row_data = [e.cpu().item() if isinstance(e, torch.Tensor) else e for e in row_data]
+    df = pd.DataFrame(row_data, columns=column_names)
+    # save to csv
+    df.to_csv(f'{args.eval_name}.csv')
+    
     run.finish()

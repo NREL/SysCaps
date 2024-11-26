@@ -6,6 +6,7 @@ from typing import List
 from syscaps.models.third_party.sashimi import Sashimi # SSM
 from transformers import DistilBertModel,  BertModel, LongformerForSequenceClassification, LongformerConfig
 #DistilBertTokenizer, BertTokenizer, 
+from transformers import AutoModel
 
 
 class TimeSeriesSinusoidalPeriodicEmbedding(nn.Module):
@@ -159,7 +160,6 @@ class TextEncoder(nn.Module):
         elif model_name == "bert-base-uncased":
             self.model = BertModel.from_pretrained(model_name,
                                                    output_hidden_states=True)
-            #self.tokenizer = BertTokenizer.from_pretrained(model_name, max_length=model_max_length)
             self.projection = nn.Linear(4 * self.model.config.hidden_size,
                                         self.model.config.hidden_size)
 
@@ -169,17 +169,21 @@ class TextEncoder(nn.Module):
             else:
                 layers_to_finetune = [f'encoder.layer.{i}' for i in range(8,12)]
                 for name, param in self.model.named_parameters():
-                    # if finetuning, freeze all layers except the last four
+                    # if finetuning only specific layers, freeze all layers except the last four
                     if name not in layers_to_finetune and self.finetune_only_specific_layers: 
+                        # not a layer to finetune, so freeze
                         param.requires_grad = False
                     # not freezing, and not finetuning - so requires_grad!
                     elif name not in layers_to_finetune:
+                        # not a layer to finetune, so freeze
                         param.requires_grad = True
                     # not freezing and finetuning - tune the last layers
                     elif self.finetune_only_specific_layers:
+                        # this is a layer we finetune
                         param.requires_grad = True
-                    # not freezing, and not finetuning - tune the last layer too
+                    # not freezing, and finetuning all layers
                     elif name:
+                        # this is a layer we finetune
                         param.requires_grad = True
                 # always disable pooler params because we don't use it
                 for name, param in self.model.pooler.named_parameters():
@@ -204,22 +208,38 @@ class TextEncoder(nn.Module):
             else:
                 layers_to_finetune = [f'encoder.layer.{i}' for i in range(8,12)]
                 for name, param in self.model.named_parameters():
-                    # if finetuning, freeze all layers except the last four
+                    # if finetuning only specific layers, freeze all layers except the last four
                     if name not in layers_to_finetune and self.finetune_only_specific_layers: 
                         param.requires_grad = False
                     # not freezing, and not finetuning - so requires_grad!
                     elif name not in layers_to_finetune:
+                        # not a layer to finetune, so freeze                        
                         param.requires_grad = True
                     # not freezing and finetuning - tune the last layers
                     elif self.finetune_only_specific_layers:
                         param.requires_grad = True
-                    # not freezing, and not finetuning - tune the last layer too
+                    # not freezing, and finetuning all layers
                     elif name:
                         param.requires_grad = True
                 # always disable classifier params because we don't use it
                 for name, param in self.model.classifier.named_parameters():
                     param.requires_grad = False
-
+        
+        elif model_name == "sup-simcse-roberta-large":
+            self.model = AutoModel.from_pretrained("princeton-nlp/sup-simcse-roberta-large",
+                                                   output_hidden_states=True)
+            self.projection = nn.Linear(4 * self.model.config.hidden_size,
+                                        self.model.config.hidden_size)
+            if self.freeze:
+                for name, param in self.model.named_parameters():
+                    param.requires_grad = False
+            else:
+                for name, param in self.model.named_parameters():
+                    param.requires_grad = True
+            # always disable pooler params because we don't use it
+            for name, param in self.model.pooler.named_parameters():
+                param.requires_grad = False
+                                      
         self.output_dim = self.model.config.hidden_size
 
 
@@ -237,10 +257,10 @@ class TextEncoder(nn.Module):
                                 attention_mask=attention_masks)
             last_hidden_state = output.last_hidden_state
             return last_hidden_state[:, self.target_token_idx, :]
-        elif self.model_name == 'bert-base-uncased' or 'longformer-base-4096':
+        elif self.model_name == 'bert-base-uncased' or 'longformer-base-4096' or 'sup-simcse-roberta-large':
             outputs = self.model(input_ids=input_ids,
                                 attention_mask=attention_masks)
-            
+
             last_hidden_states = outputs.hidden_states
             last_hidden_states = torch.cat(tuple([last_hidden_states[i] for i in [-4, -3, -2, -1]]), dim=-1)
             return self.projection(last_hidden_states[:, self.target_token_idx, :])

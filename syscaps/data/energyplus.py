@@ -6,7 +6,7 @@ import syscaps.transforms as transforms
 from syscaps.transforms import BoxCoxTransform, StandardScalerTransform
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
-from transformers import  DistilBertTokenizer, BertTokenizer, LongformerTokenizer
+from transformers import  DistilBertTokenizer, BertTokenizer, LongformerTokenizer, AutoTokenizer
 from datetime import date, datetime, timedelta, time as t
 
 
@@ -59,6 +59,7 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
         """
         BB_split = 'Buildings-900K-test' if 'buildings900k_test' in index_file \
             else 'Buildings-900K/end-use-load-profiles-for-us-building-stock'
+        metadata_parquet_path = data_path / 'Buildings-900K/end-use-load-profiles-for-us-building-stock/2021'
         self.buildings_bench_path = data_path / BB_split / '2021'
         self.captions_path = data_path / 'captions'
         self.metadata_path = data_path / 'metadata'
@@ -94,19 +95,22 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
         elif self.tokenizer_name == "longformer-base-4096":
             self.tokenizer = LongformerTokenizer.from_pretrained('allenai/longformer-base-4096')
             print('[EnergyPlusDataset] Using longformer tokenizer, which supports up to 4096 tokens')
-
+        elif self.tokenizer_name == "sup-simcse-roberta-large":
+            self.tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/sup-simcse-roberta-large")
+        
+        
         if self.resstock_comstock == 'comstock':
             self.attributes = open(self.metadata_path / 'syscaps' / 'energyplus' / 'attributes_comstock.txt', 'r').read().strip().split('\n')
-            df1 = pd.read_parquet(self.buildings_bench_path / 'comstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
-            df2 = pd.read_parquet(self.buildings_bench_path / 'comstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df1 = pd.read_parquet(metadata_parquet_path / 'comstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df2 = pd.read_parquet(metadata_parquet_path / 'comstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
             self.attribute_dfs = {
                 'comstock_amy2018_release_1': df1,
                 'comstock_tmy3_release_1': df2
             }
         else:
             self.attributes = open(self.metadata_path / 'syscaps' / 'energyplus' / 'attributes_resstock.txt', 'r').read().strip().split('\n')
-            df1 = pd.read_parquet(self.buildings_bench_path / 'resstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
-            df2 = pd.read_parquet(self.buildings_bench_path / 'resstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df1 = pd.read_parquet(metadata_parquet_path / 'resstock_amy2018_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
+            df2 = pd.read_parquet(metadata_parquet_path / 'resstock_tmy3_release_1' / 'metadata' / 'metadata.parquet', engine="pyarrow")
             self.attribute_dfs = {
                 'resstock_amy2018_release_1': df1,
                 'resstock_tmy3_release_1': df2
@@ -231,19 +235,6 @@ class EnergyPlusDataset(torch.utils.data.Dataset):
 
         if self.include_text:
             sample['syscaps'] = self.captions_data.loc[int(bldg_id)]['caption'] # string
-                
-            # # These are caption variants used for the extra experiments
-            # # in the paper, can be ignored
-            # if (self.captions_path /  self.resstock_comstock / \
-            # syscaps_split / f'{bldg_id}_cap_attribute.txt').exists():
-            #     with open(self.captions_path /  self.resstock_comstock / \
-            #         syscaps_split / f'{bldg_id}_cap_attribute.txt') as f:
-            #         sample['syscaps_missing'] = f.read().strip()
-            # elif (self.captions_path /  self.resstock_comstock / \
-            # (syscaps_split + '_missing') / f'{bldg_id}_cap_attribute.txt').exists():
-            #     with open(self.captions_path /  self.resstock_comstock / \
-            #         (syscaps_split + '_missing') / f'{bldg_id}_cap_attribute.txt') as f:
-            #         sample['syscaps_missing'] = f.read().strip()
 
         tokenized_caption_path = self.captions_path / self.resstock_comstock / \
                     f'{syscaps_split}_tokens' / \

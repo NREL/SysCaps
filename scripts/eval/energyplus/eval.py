@@ -10,6 +10,7 @@ import argparse
 from pathlib import Path 
 import os
 import wandb
+import pandas as pd
 
 ## Env variables
 SCRIPT_PATH = Path(os.path.realpath(__file__)).parent
@@ -66,7 +67,8 @@ if __name__ == '__main__':
                         help='Use the same eval_name each time you execute '
                         'this script, for each model you want to compare in '
                          'the same wandb table.')
-    parser.add_argument('--resstock_comstock', type=str, default='comstock', required=True)
+    parser.add_argument('--resstock_comstock', type=str, default='comstock',
+                        help='resstock or comstock')
     parser.add_argument('--model_fnames', type=str, required=True, 
                         help="model file names seperated by \",\"")
     parser.add_argument('--ckpt_dir', type=str, required=True, 
@@ -168,5 +170,20 @@ if __name__ == '__main__':
                 i += 1
     table = wandb.Table(columns=column_names, data=row_data)
     wandb.log({args.eval_name: table})
+
+    # create a pandas dataframe for the table
+    for row in row_data:
+        for i in range(len(row)):
+            if isinstance(row[i], torch.Tensor):
+                row[i] = row[i].cpu().item()
+    #row_data = [e.cpu().item() if isinstance(e, torch.Tensor) else e for e in row_data]
+    df = pd.DataFrame(row_data, columns=column_names)
+    # save to csv
+    df.to_csv(f'{args.eval_name}.csv')
+    
+    # print mean and std of the metrics
+    df_ = df.drop(columns=['model', 'dataset', 'caption'])
+    # print column-wise mean and std
+    print(df_.mean())
 
     run.finish()

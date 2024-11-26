@@ -390,7 +390,7 @@ def main(args):
                             early_stopping_flag = True
                     
                     # we always save the last val model
-                    last_model_name = checkpoint_name + '_last.pt' #f'ckpt-{experiment_args.note}_last.pt'
+                    last_model_name = checkpoint_name + '_last.pt' 
                     utils.save_model_checkpoint(model, optimizer, scheduler, step, best_val_loss, 
                                               patience_counter, checkpoint_dir / last_model_name)
 
@@ -425,6 +425,8 @@ def main(args):
         run.finish()
     torch.distributed.destroy_process_group()        
 
+    # TODO: Run weight merging
+    # TODO: Run evaluation
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -480,9 +482,7 @@ if __name__ == '__main__':
                         help='Name of index files for training')
     parser.add_argument('--val_idx_file', type=str, default='',
                         help='Name of index files for validation')
-    #parser.add_argument('--caption_dataset_split', type=str, default='short',
-    #                    choices=['keyvalue', 'short', 'medium', 'long'],
-    #                    help='ignored if using onehot models')
+
     
     ## wind only
     parser.add_argument('--caption_augmentation_style', type=int, default=1,
@@ -501,7 +501,7 @@ if __name__ == '__main__':
         # grab the custom model args as set in the config file
         model_args = toml_args['model']
 
-        # grab inputs to override the argparse defaults above from the config file
+        # grab inputs to override the argparse inputs from the config file
         if 'experiment' in toml_args:
             for k,v in toml_args['experiment'].items():
                 #if not k in experiment_args.hyper_opt:

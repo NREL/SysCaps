@@ -15,7 +15,6 @@ CUDA_VISIBLE_DEVICES=0 torchrun \
         --dataset energyplus_comstock \
         --train_idx_file comstock_train_seed=42.idx \
         --val_idx_file comstock_val_seed=42.idx \
-        --caption_dataset_split keyvalue \
         --random_seed 10 \
         --num_workers 8 \
         --disable_slurm \
